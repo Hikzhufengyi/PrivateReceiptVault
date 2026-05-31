@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.openURL) private var openURL
     @EnvironmentObject private var proAccess: ProAccess
     @EnvironmentObject private var store: ReceiptStore
     @EnvironmentObject private var appLock: AppLock
@@ -62,6 +63,18 @@ struct SettingsView: View {
                 Label("OCR runs on device", systemImage: "iphone.gen3")
                 Label("Receipts stay in local app storage", systemImage: "externaldrive.badge.shield.checkmark")
                 LocalDataFlowView()
+
+                Button {
+                    openExternalURL("https://hikzhufengyi.github.io/receipt-vault-site/privacy.html")
+                } label: {
+                    Label("Privacy Policy", systemImage: "hand.raised")
+                }
+
+                Button {
+                    openExternalURL("https://hikzhufengyi.github.io/receipt-vault-site/support.html")
+                } label: {
+                    Label("Support", systemImage: "questionmark.circle")
+                }
             } header: {
                 Text("Privacy")
             } footer: {
@@ -166,6 +179,11 @@ struct SettingsView: View {
         } catch {
             backupMessage = "Restore failed. Check the backup file and password. \(error.localizedDescription)"
         }
+    }
+
+    private func openExternalURL(_ string: String) {
+        guard let url = URL(string: string) else { return }
+        openURL(url)
     }
 }
 

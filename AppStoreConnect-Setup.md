@@ -32,8 +32,16 @@ Pro unlocks:
 
 ## Before Release
 
-- Replace bundle identifier `com.example.PrivateReceiptVault` with the final App Store bundle ID.
+- Bundle identifier is set to `com.hikzhufengyi.receiptvault`.
 - Create the product ID above in App Store Connect.
 - Add pricing and availability for the non-consumable purchase.
 - Test purchase and restore in Sandbox and TestFlight.
 - Keep the local "Unlock Pro for testing" button only in debug/TestFlight builds before public release.
+
+## Export Compliance
+
+The app uses standard Apple platform encryption APIs for local password-protected backup files and device authentication. The generated Info.plist includes:
+
+- `ITSAppUsesNonExemptEncryption = NO`
+
+In App Store Connect, answer the export compliance questions consistently with the app behavior: encryption is used only to protect user data, the app is not a VPN, secure messaging, encrypted calling, anonymization, or general-purpose cryptography product.

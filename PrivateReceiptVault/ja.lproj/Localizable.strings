@@ -226,3 +226,5 @@
 "On-device only" = "端末上のみ";
 "Possible source text" = "候補の元テキスト";
 "No matching OCR line found. Check the image or enter the value manually." = "一致するOCR行が見つかりません。画像を確認するか、手動で入力してください。";
+"Privacy Policy" = "プライバシーポリシー";
+"Support" = "サポート";
