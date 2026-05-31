@@ -1,0 +1,4 @@
+"CFBundleDisplayName" = "Receipt Vault";
+"NSCameraUsageDescription" = "Receipt Vault uses the camera to scan receipts on your device.";
+"NSPhotoLibraryUsageDescription" = "Receipt Vault lets you import receipt photos from your library.";
+"NSFaceIDUsageDescription" = "Receipt Vault uses Face ID to protect your private receipts.";

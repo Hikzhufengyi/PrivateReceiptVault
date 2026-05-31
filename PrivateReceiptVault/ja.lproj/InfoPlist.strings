@@ -1,0 +1,4 @@
+"CFBundleDisplayName" = "レシート保管庫";
+"NSCameraUsageDescription" = "レシート保管庫は端末上でレシートをスキャンするためにカメラを使用します。";
+"NSPhotoLibraryUsageDescription" = "レシート保管庫は写真ライブラリからレシート写真を読み込めます。";
+"NSFaceIDUsageDescription" = "レシート保管庫はプライベートなレシートを保護するためにFace IDを使用します。";

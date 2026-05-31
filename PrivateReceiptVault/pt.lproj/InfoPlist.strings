@@ -1,0 +1,4 @@
+"CFBundleDisplayName" = "Cofre de recibos";
+"NSCameraUsageDescription" = "Cofre de recibos usa a câmera para digitalizar recibos no dispositivo.";
+"NSPhotoLibraryUsageDescription" = "Cofre de recibos permite importar fotos de recibos da biblioteca.";
+"NSFaceIDUsageDescription" = "Cofre de recibos usa Face ID para proteger seus recibos privados.";

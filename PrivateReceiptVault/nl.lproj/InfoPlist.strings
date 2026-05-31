@@ -1,0 +1,4 @@
+"CFBundleDisplayName" = "Bonnenkluis";
+"NSCameraUsageDescription" = "Bonnenkluis gebruikt de camera om bonnen op je apparaat te scannen.";
+"NSPhotoLibraryUsageDescription" = "Bonnenkluis laat je bonfoto’s uit je bibliotheek importeren.";
+"NSFaceIDUsageDescription" = "Bonnenkluis gebruikt Face ID om je privébonnen te beschermen.";

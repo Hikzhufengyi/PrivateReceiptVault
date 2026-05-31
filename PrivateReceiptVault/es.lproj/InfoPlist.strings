@@ -1,0 +1,4 @@
+"CFBundleDisplayName" = "Caja de recibos";
+"NSCameraUsageDescription" = "Caja de recibos usa la cámara para escanear recibos en tu dispositivo.";
+"NSPhotoLibraryUsageDescription" = "Caja de recibos te permite importar fotos de recibos desde tu biblioteca.";
+"NSFaceIDUsageDescription" = "Caja de recibos usa Face ID para proteger tus recibos privados.";

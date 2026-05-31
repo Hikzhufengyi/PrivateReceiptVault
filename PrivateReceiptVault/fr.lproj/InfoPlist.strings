@@ -1,0 +1,4 @@
+"CFBundleDisplayName" = "Coffre de reçus";
+"NSCameraUsageDescription" = "Coffre de reçus utilise l’appareil photo pour scanner les reçus sur votre appareil.";
+"NSPhotoLibraryUsageDescription" = "Coffre de reçus vous permet d’importer des photos de reçus depuis votre photothèque.";
+"NSFaceIDUsageDescription" = "Coffre de reçus utilise Face ID pour protéger vos reçus privés.";

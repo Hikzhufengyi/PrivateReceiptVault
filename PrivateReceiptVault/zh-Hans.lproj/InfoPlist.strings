@@ -1,0 +1,4 @@
+"CFBundleDisplayName" = "收据保险箱";
+"NSCameraUsageDescription" = "收据保险箱会使用相机在你的设备上扫描收据。";
+"NSPhotoLibraryUsageDescription" = "收据保险箱可从你的照片库导入收据照片。";
+"NSFaceIDUsageDescription" = "收据保险箱会使用 Face ID 保护你的私人收据。";

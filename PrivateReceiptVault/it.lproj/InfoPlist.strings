@@ -1,0 +1,4 @@
+"CFBundleDisplayName" = "Cassaforte ricevute";
+"NSCameraUsageDescription" = "Cassaforte ricevute usa la fotocamera per scansionare ricevute sul dispositivo.";
+"NSPhotoLibraryUsageDescription" = "Cassaforte ricevute ti consente di importare foto di ricevute dalla libreria.";
+"NSFaceIDUsageDescription" = "Cassaforte ricevute usa Face ID per proteggere le tue ricevute private.";

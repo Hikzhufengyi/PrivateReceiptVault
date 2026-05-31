@@ -1,0 +1,4 @@
+"CFBundleDisplayName" = "Belegtresor";
+"NSCameraUsageDescription" = "Belegtresor verwendet die Kamera, um Belege auf deinem Gerät zu scannen.";
+"NSPhotoLibraryUsageDescription" = "Belegtresor lässt dich Belegfotos aus deiner Mediathek importieren.";
+"NSFaceIDUsageDescription" = "Belegtresor verwendet Face ID, um deine privaten Belege zu schützen.";
