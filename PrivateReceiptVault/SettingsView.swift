@@ -75,6 +75,12 @@ struct SettingsView: View {
                 } label: {
                     Label("Support", systemImage: "questionmark.circle")
                 }
+
+                Button {
+                    openURL(AppStoreLinks.writeReviewURL)
+                } label: {
+                    Label("Rate Receipt Vault", systemImage: "star.bubble")
+                }
             } header: {
                 Text("Privacy")
             } footer: {

@@ -39,6 +39,7 @@
 		1A00003E2C00000100000001 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A00003E2B00000100000001 /* OnboardingView.swift */; };
 		1A00003F2C00000100000001 /* ReceiptReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A00003F2B00000100000001 /* ReceiptReviewView.swift */; };
 		1A0000602C00000100000001 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1A0000602B00000100000001 /* LaunchScreen.storyboard */; };
+		1A0000612C00000100000001 /* AppStoreLinks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000612B00000100000001 /* AppStoreLinks.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -93,6 +94,7 @@
 		1A00003E2B00000100000001 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		1A00003F2B00000100000001 /* ReceiptReviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReceiptReviewView.swift; sourceTree = "<group>"; };
 		1A0000602B00000100000001 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
+		1A0000612B00000100000001 /* AppStoreLinks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStoreLinks.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -133,6 +135,7 @@
 				1A00003B2B00000100000001 /* StoreKitService.swift */,
 				1A00003C2B00000100000001 /* ReceiptImageEditorView.swift */,
 				1A00003D2B00000100000001 /* BackupCrypto.swift */,
+				1A0000612B00000100000001 /* AppStoreLinks.swift */,
 				1A00003E2B00000100000001 /* OnboardingView.swift */,
 				1A00003F2B00000100000001 /* ReceiptReviewView.swift */,
 				1A0000602B00000100000001 /* LaunchScreen.storyboard */,
@@ -258,6 +261,7 @@
 				1A00003B2C00000100000001 /* StoreKitService.swift in Sources */,
 				1A00003C2C00000100000001 /* ReceiptImageEditorView.swift in Sources */,
 				1A00003D2C00000100000001 /* BackupCrypto.swift in Sources */,
+				1A0000612C00000100000001 /* AppStoreLinks.swift in Sources */,
 				1A00003E2C00000100000001 /* OnboardingView.swift in Sources */,
 				1A00003F2C00000100000001 /* ReceiptReviewView.swift in Sources */,
 			);
