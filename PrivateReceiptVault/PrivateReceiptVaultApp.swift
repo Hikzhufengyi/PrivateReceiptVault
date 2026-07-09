@@ -37,7 +37,7 @@ struct RootTabView: View {
 
             ExpenseReportsView()
                 .tabItem {
-                    Label("Reports", systemImage: "folder")
+                    Label("Packets", systemImage: "folder")
                 }
 
             ReportsView()

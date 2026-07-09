@@ -6,6 +6,8 @@ struct ReceiptReviewView: View {
     let saveAction: () -> Void
 
     @State private var showingFullEdit = false
+    @State private var showingFieldDetails = false
+    @State private var showingSourceText = false
     @State private var selectedFieldKey = "total"
     @FocusState private var focusedField: String?
 
@@ -79,15 +81,31 @@ struct ReceiptReviewView: View {
 
             quickCorrectionPanel
 
-            VStack(spacing: 10) {
-                ForEach(reviewFields) { field in
-                    ReviewFieldRow(field: field, isSelected: selectedFieldKey == field.key) {
-                        selectedFieldKey = field.key
+            DisclosureGroup(isExpanded: $showingFieldDetails) {
+                VStack(spacing: 10) {
+                    ForEach(reviewFields) { field in
+                        ReviewFieldRow(field: field, isSelected: selectedFieldKey == field.key) {
+                            selectedFieldKey = field.key
+                        }
                     }
                 }
+                .padding(.top, 10)
+            } label: {
+                Label("Review extracted details", systemImage: "list.bullet.rectangle")
+                    .font(.subheadline.weight(.semibold))
             }
+            .padding(12)
+            .background(.secondary.opacity(0.07), in: RoundedRectangle(cornerRadius: 8))
 
-            sourceLinesPanel
+            DisclosureGroup(isExpanded: $showingSourceText) {
+                sourceLinesPanel
+                    .padding(.top, 10)
+            } label: {
+                Label("Possible source text", systemImage: "text.magnifyingglass")
+                    .font(.subheadline.weight(.semibold))
+            }
+            .padding(12)
+            .background(.secondary.opacity(0.07), in: RoundedRectangle(cornerRadius: 8))
 
             HStack(spacing: 10) {
                 Button {
@@ -175,8 +193,9 @@ struct ReceiptReviewView: View {
 
         return VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Label("Possible source text", systemImage: "text.magnifyingglass")
-                    .font(.subheadline.weight(.semibold))
+                Text("OCR lines")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
                 Spacer()
                 if let field {
                     Text(field.title)
@@ -208,8 +227,6 @@ struct ReceiptReviewView: View {
                 }
             }
         }
-        .padding(12)
-        .background(.secondary.opacity(0.07), in: RoundedRectangle(cornerRadius: 8))
     }
 
     private var reviewFields: [ReviewField] {

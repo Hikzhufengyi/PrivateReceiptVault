@@ -25,10 +25,7 @@ Pro unlocks:
 - Unlimited receipts
 - PDF reports
 - ZIP export with CSV and images
-- Expense reports and insights
-- Backup and restore
-- Duplicate receipt detection
-- Face ID privacy lock
+- Professional export packets
 
 ## Before Release
 

@@ -50,12 +50,6 @@ struct ScanView: View {
                         dismiss()
                     }
                 }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
-                        save()
-                    }
-                    .disabled(draft.totalText.isEmpty)
-                }
             }
             .sheet(item: $activePickerSource) { source in
                 ImagePicker(source: source) { image in
@@ -232,7 +226,6 @@ struct ScanView: View {
                 processedAutoCropped = processed.autoCropped
                 selectedImage = processed.image
                 draft.imageData = processed.image.jpegData(compressionQuality: 0.88)
-                showingImageEditor = true
             }
             recognize(processed.image)
         }

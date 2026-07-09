@@ -156,7 +156,7 @@ final class ReceiptStore: ObservableObject {
 
     func addExpenseReport(_ draft: ExpenseReportDraft) {
         let report = ExpenseReport(
-            title: draft.title.isEmpty ? "Expense Report" : draft.title,
+            title: draft.title.isEmpty ? "Receipt Packet" : draft.title,
             companyName: draft.companyName,
             claimantName: draft.claimantName,
             department: draft.department,

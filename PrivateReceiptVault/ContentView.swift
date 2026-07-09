@@ -15,30 +15,34 @@ struct ContentView: View {
     @State private var searchText = ""
     @State private var selectedCategory: ReceiptCategory?
     @State private var dateFilter: ReceiptDateFilter = .all
+    @State private var showingNeedsReviewOnly = false
 
     private var filteredReceipts: [Receipt] {
-        store.filteredReceipts(query: searchText, category: selectedCategory, dateFilter: dateFilter)
+        let receipts = store.filteredReceipts(query: searchText, category: selectedCategory, dateFilter: dateFilter)
+        guard showingNeedsReviewOnly else { return receipts }
+        return receipts.filter(needsReview)
     }
-    private var currencyCode: String {
-        store.receipts.first?.currencyCode ?? CurrencyOption.defaultCode
+    private var monthlyTotalLabel: String {
+        let totalsByCurrency = Dictionary(grouping: monthlyReceipts, by: \.currencyCode)
+            .mapValues { receipts in receipts.reduce(Decimal.zero) { $0 + $1.total } }
+        if totalsByCurrency.count == 1,
+           let currencyCode = totalsByCurrency.keys.first,
+           let total = totalsByCurrency[currencyCode] {
+            return total.formatted(.currency(code: currencyCode))
+        }
+        if totalsByCurrency.isEmpty {
+            return Decimal.zero.formatted(.currency(code: CurrencyOption.defaultCode))
+        }
+        return String(localized: "Multiple currencies")
     }
     private var monthlyReceipts: [Receipt] {
         store.receipts.filter { Calendar.current.isDate($0.date, equalTo: .now, toGranularity: .month) }
-    }
-    private var monthlyTotal: Decimal {
-        monthlyReceipts.reduce(Decimal.zero) { $0 + $1.total }
     }
     private var unclassifiedCount: Int {
         store.receipts.filter { $0.category == .other }.count
     }
     private var incompleteCount: Int {
-        store.receipts.filter { receipt in
-            receipt.merchant == "Unknown merchant" ||
-            receipt.tax == nil ||
-            receipt.subtotal == nil ||
-            receipt.paymentMethod.isEmpty ||
-            receipt.imageFileName == nil
-        }.count
+        store.receipts.filter(needsReview).count
     }
 
     var body: some View {
@@ -47,19 +51,26 @@ struct ContentView: View {
                 Section {
                     VStack(alignment: .leading, spacing: 12) {
                         SummaryView(
-                            monthlyTotal: monthlyTotal,
-                            currencyCode: currencyCode,
+                            monthlyTotalLabel: monthlyTotalLabel,
                             receiptCount: store.receipts.count,
                             monthlyReceiptCount: monthlyReceipts.count,
                             unclassifiedCount: unclassifiedCount,
-                            incompleteCount: incompleteCount
-                        ) {
-                            if proAccess.canAddReceipt(currentCount: store.receipts.count) {
-                                showingScanner = true
-                            } else {
-                                showingPaywall = true
+                            incompleteCount: incompleteCount,
+                            scanAction: {
+                                if proAccess.canAddReceipt(currentCount: store.receipts.count) {
+                                    showingScanner = true
+                                } else {
+                                    showingPaywall = true
+                                }
+                            },
+                            needsCategoryAction: {
+                                selectedCategory = .other
+                                showingNeedsReviewOnly = false
+                            },
+                            needsReviewAction: {
+                                showingNeedsReviewOnly = true
                             }
-                        }
+                        )
                         TrustBadgesView()
                     }
                     .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16))
@@ -68,6 +79,18 @@ struct ContentView: View {
 
                 Section {
                     FilterBar(category: $selectedCategory, dateFilter: $dateFilter)
+                    if showingNeedsReviewOnly {
+                        HStack {
+                            Label("Showing receipts that need review", systemImage: "exclamationmark.magnifyingglass")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(.orange)
+                            Spacer()
+                            Button("Clear") {
+                                showingNeedsReviewOnly = false
+                            }
+                            .font(.caption.weight(.semibold))
+                        }
+                    }
                 }
                 .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
 
@@ -182,6 +205,14 @@ struct ContentView: View {
         }
     }
 
+    private func needsReview(_ receipt: Receipt) -> Bool {
+        receipt.merchant == "Unknown merchant" ||
+            receipt.tax == nil ||
+            receipt.subtotal == nil ||
+            receipt.paymentMethod.isEmpty ||
+            receipt.imageFileName == nil
+    }
+
     private func export(_ options: ExportOptions) {
         guard options.kind == .csv || proAccess.isPro else {
             showingPaywall = true
@@ -242,13 +273,14 @@ private struct LockScreenView: View {
 }
 
 private struct SummaryView: View {
-    let monthlyTotal: Decimal
-    let currencyCode: String
+    let monthlyTotalLabel: String
     let receiptCount: Int
     let monthlyReceiptCount: Int
     let unclassifiedCount: Int
     let incompleteCount: Int
     let scanAction: () -> Void
+    let needsCategoryAction: () -> Void
+    let needsReviewAction: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -257,9 +289,11 @@ private struct SummaryView: View {
                     Text("This month")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
-                    Text(monthlyTotal.formatted(.currency(code: currencyCode)))
+                    Text(monthlyTotalLabel)
                         .font(.title.bold())
                         .monospacedDigit()
+                        .minimumScaleFactor(0.7)
+                        .lineLimit(1)
                 }
                 Spacer()
                 Button(action: scanAction) {
@@ -275,8 +309,8 @@ private struct SummaryView: View {
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
                 StatPill(title: "Receipts", value: "\(receiptCount)", systemImage: "doc.text")
                 StatPill(title: "This month", value: "\(monthlyReceiptCount)", systemImage: "calendar")
-                StatPill(title: "Needs category", value: "\(unclassifiedCount)", systemImage: "tag")
-                StatPill(title: "Needs review", value: "\(incompleteCount)", systemImage: "exclamationmark.magnifyingglass")
+                StatPill(title: "Needs category", value: "\(unclassifiedCount)", systemImage: "tag", action: needsCategoryAction)
+                StatPill(title: "Needs review", value: "\(incompleteCount)", systemImage: "exclamationmark.magnifyingglass", action: needsReviewAction)
             }
         }
         .padding(16)
@@ -288,8 +322,20 @@ private struct StatPill: View {
     let title: String
     let value: String
     let systemImage: String
+    var action: (() -> Void)?
 
     var body: some View {
+        if let action {
+            Button(action: action) {
+                content
+            }
+            .buttonStyle(.plain)
+        } else {
+            content
+        }
+    }
+
+    private var content: some View {
         HStack(spacing: 8) {
             Image(systemName: systemImage)
                 .foregroundStyle(.tint)

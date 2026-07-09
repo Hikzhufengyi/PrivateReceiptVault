@@ -123,7 +123,7 @@ struct SettingsView: View {
                 Text("Export backups to Files or iCloud Drive. After exporting outside the app, you can delete and reinstall Receipt Vault and restore from the backup file. Keep your backup password safe; it cannot be recovered.")
             }
         }
-        .navigationTitle("Privacy")
+        .navigationTitle("Settings")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showingPaywall) {
             PaywallView()

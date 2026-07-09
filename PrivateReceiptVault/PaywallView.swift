@@ -25,7 +25,7 @@ struct PaywallView: View {
                             VStack(alignment: .leading, spacing: 5) {
                                 Text("Receipt Vault Pro")
                                     .font(.title2.bold())
-                                Text("Unlimited offline receipt storage, protected exports, and professional reports.")
+                                Text("Unlimited offline receipt storage and professional export packets.")
                                     .font(.subheadline)
                                     .foregroundStyle(.secondary)
                             }
@@ -41,17 +41,15 @@ struct PaywallView: View {
 
                 Section("Free") {
                     ProFeatureRow(title: "\(ProAccess.freeReceiptLimit) receipts included", subtitle: "Try scanning, OCR, search, and CSV export.", systemImage: "seal")
-                    ProFeatureRow(title: "Offline by default", subtitle: "No account, no bank connection, no server upload.", systemImage: "wifi.slash")
+                    ProFeatureRow(title: "Private by default", subtitle: "No account, no bank connection, device lock, and local backup.", systemImage: "wifi.slash")
                 }
 
                 Section("Pro unlocks") {
                     ProComparisonView()
                     ProFeatureRow(title: "Unlimited receipts", subtitle: "Keep growing your private local archive.", systemImage: "infinity")
-                    ProFeatureRow(title: "Professional reports", subtitle: "PDF, ZIP, images, summaries, and expense packets.", systemImage: "doc.richtext")
-                    ProFeatureRow(title: "Insights charts", subtitle: "Trends, categories, tax totals, and comparison metrics.", systemImage: "chart.pie")
-                    ProFeatureRow(title: "Encrypted backups", subtitle: "Reinstall anytime and restore from Files or iCloud Drive.", systemImage: "externaldrive.badge.checkmark")
-                    ProFeatureRow(title: "Duplicate detection", subtitle: "Reduce accidental double entry before saving.", systemImage: "doc.on.doc")
-                    ProFeatureRow(title: "Privacy lock", subtitle: "Protect the vault with device authentication.", systemImage: "faceid")
+                    ProFeatureRow(title: "PDF export packets", subtitle: "Create polished summaries for reimbursement, taxes, or records.", systemImage: "doc.richtext")
+                    ProFeatureRow(title: "ZIP with images", subtitle: "Package CSV data, PDF summaries, and original receipt images together.", systemImage: "doc.zipper")
+                    ProFeatureRow(title: "Long-term archive", subtitle: "Remove the free receipt limit when your vault starts to grow.", systemImage: "archivebox")
                 }
 
                 Section {
@@ -113,9 +111,9 @@ private struct ProComparisonView: View {
     private let rows: [(LocalizedStringKey, LocalizedStringKey, LocalizedStringKey)] = [
         ("Receipts", "30 forever", "Unlimited"),
         ("Exports", "CSV", "PDF + ZIP + images"),
-        ("Reports", "Basic", "Charts + summaries"),
-        ("Backup", "Manual file", "Password protected"),
-        ("Privacy", "Local storage", "Lock + encrypted backup")
+        ("Packets", "Create + view", "Professional export"),
+        ("Backup", "Local file", "Local file"),
+        ("Privacy", "Lock included", "Lock included")
     ]
 
     var body: some View {

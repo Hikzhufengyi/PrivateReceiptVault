@@ -9,9 +9,9 @@ struct ExpenseReportsView: View {
             List {
                 if store.expenseReports.isEmpty {
                     ContentUnavailableView(
-                        "No expense reports",
+                        "No packets yet",
                         systemImage: "folder.badge.plus",
-                        description: Text("Create a report package for reimbursement or tax records.")
+                        description: Text("Create a packet for reimbursement, taxes, warranties, or records.")
                     )
                 } else {
                     ForEach(store.expenseReports) { report in
@@ -26,7 +26,7 @@ struct ExpenseReportsView: View {
                     }
                 }
             }
-            .navigationTitle("Expense Reports")
+            .navigationTitle("Packets")
             .toolbar {
                 Button {
                     showingEditor = true
@@ -77,7 +77,7 @@ struct ExpenseReportEditorView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Report") {
+                Section("Packet") {
                     TextField("Title", text: $draft.title)
                     TextField("Company", text: $draft.companyName)
                     TextField("Claimant", text: $draft.claimantName)
@@ -106,7 +106,7 @@ struct ExpenseReportEditorView: View {
                     }
                 }
             }
-            .navigationTitle("New Report")
+            .navigationTitle("New Packet")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
@@ -126,7 +126,10 @@ struct ExpenseReportEditorView: View {
     }
 
     private var filteredReceipts: [Receipt] {
-        store.receipts.filter { $0.date >= Calendar.current.startOfDay(for: draft.startDate) && $0.date <= draft.endDate }
+        let calendar = Calendar.current
+        let start = calendar.startOfDay(for: draft.startDate)
+        let end = calendar.date(bySettingHour: 23, minute: 59, second: 59, of: draft.endDate) ?? draft.endDate
+        return store.receipts.filter { $0.date >= start && $0.date <= end }
     }
 
     private func receiptBinding(_ id: UUID) -> Binding<Bool> {
