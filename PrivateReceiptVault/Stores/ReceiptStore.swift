@@ -35,31 +35,35 @@ final class ReceiptStore: ObservableObject {
 
     @discardableResult
     func add(from draft: ReceiptDraft) -> Receipt {
-        var fileName = draft.imageFileName
-        if let data = draft.imageData {
+        var normalizedDraft = draft
+        normalizedDraft.reconcileAmountsKeepingTotal()
+
+        var fileName = normalizedDraft.imageFileName
+        if let data = normalizedDraft.imageData {
             fileName = saveImageData(data)
         }
 
         let receipt = Receipt(
-            merchant: draft.merchant.isEmpty ? "Unknown merchant" : draft.merchant,
-            date: draft.date,
-            subtotal: draft.subtotal,
-            total: draft.total,
-            tax: draft.tax,
-            taxRate: draft.taxRate,
-            tip: draft.tip,
-            currencyCode: draft.currencyCode.isEmpty ? "USD" : draft.currencyCode.uppercased(),
-            category: draft.category,
-            paymentMethod: draft.paymentMethod,
-            cardLast4: draft.cardLast4,
-            transactionID: draft.transactionID,
-            storeAddress: draft.storeAddress,
-            receiptNumber: draft.receiptNumber,
-            lineItems: draft.lineItems,
-            project: draft.project,
-            notes: draft.notes,
-            recognizedText: draft.recognizedText,
-            imageFileName: fileName
+            merchant: normalizedDraft.merchant.isEmpty ? "Unknown merchant" : normalizedDraft.merchant,
+            date: normalizedDraft.date,
+            subtotal: normalizedDraft.subtotal,
+            total: normalizedDraft.total,
+            tax: normalizedDraft.tax,
+            taxRate: normalizedDraft.taxRate,
+            tip: normalizedDraft.tip,
+            currencyCode: normalizedDraft.currencyCode.isEmpty ? "USD" : normalizedDraft.currencyCode.uppercased(),
+            category: normalizedDraft.category,
+            paymentMethod: normalizedDraft.paymentMethod,
+            cardLast4: normalizedDraft.cardLast4,
+            transactionID: normalizedDraft.transactionID,
+            storeAddress: normalizedDraft.storeAddress,
+            receiptNumber: normalizedDraft.receiptNumber,
+            lineItems: normalizedDraft.lineItems,
+            project: normalizedDraft.project,
+            notes: normalizedDraft.notes,
+            recognizedText: normalizedDraft.recognizedText,
+            imageFileName: fileName,
+            reimbursementStatus: normalizedDraft.reimbursementStatus
         )
         receipts.insert(receipt, at: 0)
         save()
@@ -239,6 +243,10 @@ final class ReceiptStore: ObservableObject {
 
     func duplicateCandidates(for draft: ReceiptDraft) -> [Receipt] {
         receipts.filter { receipt in
+            if receipt.matchesKeyFields(of: draft) {
+                return true
+            }
+
             let sameAmount = receipt.total == draft.total
             let sameDate = Calendar.current.isDate(receipt.date, inSameDayAs: draft.date)
             let normalizedMerchant = receipt.merchant.normalizedForMatching
@@ -248,21 +256,42 @@ final class ReceiptStore: ObservableObject {
         }
     }
 
-    func filteredReceipts(query: String, category: ReceiptCategory?, dateFilter: ReceiptDateFilter) -> [Receipt] {
+    func filteredReceipts(query: String, category: ReceiptCategory?, dateFilter: ReceiptDateFilter, amountFilter: ReceiptAmountFilter, reimbursementFilter: ReceiptReimbursementFilter) -> [Receipt] {
         receipts.filter { receipt in
             let matchesQuery = query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || receipt.searchableText.localizedCaseInsensitiveContains(query)
             let matchesCategory = category == nil || receipt.category == category
             let matchesDate: Bool
             switch dateFilter {
-            case .all:
+            case .all, .custom:
                 matchesDate = true
             case .thisMonth:
                 matchesDate = Calendar.current.isDate(receipt.date, equalTo: .now, toGranularity: .month)
             case .thisYear:
                 matchesDate = Calendar.current.isDate(receipt.date, equalTo: .now, toGranularity: .year)
             }
-            return matchesQuery && matchesCategory && matchesDate
+            let matchesAmount: Bool
+            switch amountFilter {
+            case .all:
+                matchesAmount = true
+            case .under50:
+                matchesAmount = receipt.total < 50
+            case .from50To200:
+                matchesAmount = receipt.total >= 50 && receipt.total <= 200
+            case .over200:
+                matchesAmount = receipt.total > 200
+            }
+            let matchesReimbursement: Bool
+            switch reimbursementFilter {
+            case .all:
+                matchesReimbursement = true
+            case .reimbursable:
+                matchesReimbursement = receipt.reimbursementState == .reimbursable
+            case .reimbursed:
+                matchesReimbursement = receipt.reimbursementState == .reimbursed
+            }
+            return matchesQuery && matchesCategory && matchesDate && matchesAmount && matchesReimbursement
         }
+        .sorted { $0.date > $1.date }
     }
 
     private func csvData(for receipts: [Receipt]) -> String {
@@ -385,6 +414,25 @@ final class ReceiptStore: ObservableObject {
 private extension Receipt {
     var searchableText: String {
         [merchant, currencyCode, category.rawValue, project, notes, recognizedText].joined(separator: " ")
+    }
+
+    func matchesKeyFields(of draft: ReceiptDraft) -> Bool {
+        Calendar.current.isDate(date, inSameDayAs: draft.date) &&
+            total == draft.total &&
+            normalizedOptional(subtotal) == normalizedOptional(draft.subtotal) &&
+            normalizedOptional(tax) == normalizedOptional(draft.tax) &&
+            normalizedOptional(tip) == normalizedOptional(draft.tip) &&
+            currencyCode.uppercased() == draft.currencyCode.uppercased() &&
+            category == draft.category &&
+            merchant.normalizedForMatching == draft.merchant.normalizedForMatching &&
+            paymentMethod.normalizedForMatching == draft.paymentMethod.normalizedForMatching &&
+            cardLast4.normalizedForMatching == draft.cardLast4.normalizedForMatching &&
+            receiptNumber.normalizedForMatching == draft.receiptNumber.normalizedForMatching &&
+            storeAddress.normalizedForMatching == draft.storeAddress.normalizedForMatching
+    }
+
+    private func normalizedOptional(_ value: Decimal?) -> Decimal {
+        value ?? Decimal(-1)
     }
 }
 

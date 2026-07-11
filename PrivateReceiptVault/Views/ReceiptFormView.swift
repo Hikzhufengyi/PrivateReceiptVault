@@ -12,13 +12,13 @@ struct ReceiptFormView: View {
 
                     DatePicker("Date", selection: $draft.date, displayedComponents: .date)
 
-                    TextField("Subtotal", text: $draft.subtotalText)
+                    TextField("小计/税前金额", text: $draft.subtotalText)
                         .keyboardType(.decimalPad)
 
-                    TextField("Total", text: $draft.totalText)
+                    TextField("实付金额", text: $draft.totalText)
                         .keyboardType(.decimalPad)
 
-                    TextField("Tax", text: $draft.taxText)
+                    TextField("税额", text: $draft.taxText)
                         .keyboardType(.decimalPad)
 
                     TextField("Tax rate %", text: $draft.taxRateText)
@@ -37,6 +37,12 @@ struct ReceiptFormView: View {
                     Picker("Category", selection: $draft.category) {
                         ForEach(ReceiptCategory.allCases) { category in
                             Text(category.localizedName).tag(category)
+                        }
+                    }
+
+                    Picker("报销状态", selection: $draft.reimbursementStatus) {
+                        ForEach(ReimbursementStatus.allCases) { status in
+                            Text(status.localizedName).tag(status)
                         }
                     }
 
@@ -82,15 +88,6 @@ struct ReceiptFormView: View {
                             .font(.subheadline)
                         }
                     }
-                }
-            }
-
-            if !draft.recognizedText.isEmpty {
-                GroupBox("Recognized Text") {
-                    Text(draft.recognizedText)
-                        .font(.footnote.monospaced())
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .textSelection(.enabled)
                 }
             }
         }

@@ -18,30 +18,30 @@ struct ScanView: View {
     @State private var showingDuplicateAlert = false
     @State private var isRecognizing = false
     @State private var recognitionError: String?
-    @State private var continuousMode = false
+    @State private var showingNoReceiptAlert = false
 
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 18) {
-                    imagePreview
-                    TrustBadgesView(compact: true)
+                VStack(spacing: 12) {
+                    if selectedImage == nil {
+                        imagePreview
+                        TrustBadgesView(compact: true)
+                    }
 
                     scanSourceButtons
-
-                    Toggle(isOn: $continuousMode) {
-                        Label("Continuous scan", systemImage: "rectangle.stack.badge.plus")
-                    }
-                    .toggleStyle(.switch)
+                    selectedImageActions
 
                     if selectedImage != nil {
-                        ReceiptReviewView(draft: $draft, isRecognizing: isRecognizing) {
+                        ReceiptReviewView(draft: $draft, isRecognizing: isRecognizing, showsSaveButton: false) {
                             save()
                         }
                     }
                 }
                 .padding()
+                .padding(.bottom, selectedImage == nil ? 0 : 92)
             }
+            .scrollDismissesKeyboard(.interactively)
             .navigationTitle("Add Receipt")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -75,23 +75,63 @@ struct ScanView: View {
             } message: {
                 Text(recognitionError ?? "")
             }
+            .alert("没有识别到收据", isPresented: $showingNoReceiptAlert) {
+                Button("重新拍照") {
+                    activePickerSource = .camera
+                }
+                Button("从相册选择") {
+                    activePickerSource = .photoLibrary
+                }
+                Button("继续手动填写", role: .cancel) {}
+            } message: {
+                Text("这张图片没有识别出收据的关键字段。请让收据边缘完整、文字清晰后重新拍照，或从相册选择更清楚的图片。")
+            }
             .alert("Possible duplicate", isPresented: $showingDuplicateAlert) {
                 Button("Save Anyway") {
                     store.add(from: draft)
-                    if continuousMode {
-                        resetForNextReceipt()
-                    } else {
-                        dismiss()
-                    }
+                    dismiss()
                 }
                 Button("Review", role: .cancel) {}
             } message: {
-                Text("This looks similar to \(duplicateCandidates.first?.merchant ?? "an existing receipt") on the same date with the same amount.")
+                Text("The scanned fields match an existing receipt: \(duplicateCandidates.first?.merchant ?? "existing receipt"), same date and amount. Review before saving again.")
             }
             .sheet(isPresented: $showingPaywall) {
                 PaywallView()
             }
+            .safeAreaInset(edge: .bottom) {
+                if selectedImage != nil {
+                    bottomSaveBar
+                }
+            }
         }
+    }
+
+    private var canSaveReceipt: Bool {
+        !draft.totalText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    private var bottomSaveBar: some View {
+        VStack(spacing: 10) {
+            Button {
+                save()
+            } label: {
+                Label("Save Receipt", systemImage: "checkmark.circle")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+            .disabled(!canSaveReceipt || isRecognizing)
+
+            if isRecognizing {
+                Text("AI 正在识别...")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(.horizontal)
+        .padding(.top, 12)
+        .padding(.bottom, 8)
+        .background(.bar)
     }
 
     @ViewBuilder
@@ -112,6 +152,41 @@ struct ScanView: View {
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.bordered)
+        }
+    }
+
+    @ViewBuilder
+    private var selectedImageActions: some View {
+        if let selectedImage {
+            HStack(spacing: 10) {
+                Label(isRecognizing ? "AI 正在识别" : "图片已添加", systemImage: isRecognizing ? "text.viewfinder" : "photo.badge.checkmark")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(isRecognizing ? Color.secondary : Color.green)
+
+                Spacer()
+
+                if isRecognizing {
+                    ProgressView()
+                        .controlSize(.small)
+                }
+
+                Button {
+                    if originalImageForEditing == nil {
+                        originalImageForEditing = selectedImage
+                    }
+                    processedImageForEditing = selectedImage
+                    showingImageEditor = true
+                } label: {
+                    Label("裁剪", systemImage: "crop.rotate")
+                        .labelStyle(.iconOnly)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                .disabled(isRecognizing)
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+            .background(.secondary.opacity(0.07), in: RoundedRectangle(cornerRadius: 8))
         }
     }
 
@@ -149,23 +224,34 @@ struct ScanView: View {
                 Image(systemName: "doc.text.viewfinder")
                     .font(.system(size: 42))
                     .foregroundStyle(.tint)
-                Text("Scan a receipt or import a photo")
+                Text("拍一张照片")
                     .font(.headline)
-                Text("Review extracted fields before saving.")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("AI自动提取：")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], alignment: .leading, spacing: 7) {
+                        ForEach(["商户", "日期", "金额", "税额", "商品明细"], id: \.self) { item in
+                            Label(item, systemImage: "checkmark.circle.fill")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(.primary)
+                        }
+                    }
+                }
+                .frame(maxWidth: 260, alignment: .leading)
             }
             .frame(maxWidth: .infinity)
-            .frame(height: 220)
+            .frame(minHeight: 240)
             .background(.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 8))
         }
     }
 
-    private func recognize(_ image: UIImage) {
+    private func recognize(_ image: UIImage, fallbackImage: UIImage? = nil) {
         isRecognizing = true
         Task {
             do {
-                let result = try await OCRService.recognize(image: image)
+                let images = fallbackImage.map { [image, $0] } ?? [image]
+                let result = try await OCRService.recognize(images: images)
                 await MainActor.run {
                     draft.recognizedText = result.text
                     if !result.merchant.isEmpty { draft.merchant = result.merchant }
@@ -184,6 +270,9 @@ struct ScanView: View {
                     draft.recognizedFieldKeys = result.recognizedFieldKeys
                     draft.lowConfidenceFieldKeys = result.lowConfidenceFieldKeys
                     draft.lineItems = result.lineItems
+                    draft.reconcileAmountsKeepingTotal()
+                    applyAIUnderstanding(from: result)
+                    showingNoReceiptAlert = isClearlyNotReceipt(result)
                     isRecognizing = false
                 }
             } catch {
@@ -195,12 +284,22 @@ struct ScanView: View {
         }
     }
 
+    private func isClearlyNotReceipt(_ result: OCRResult) -> Bool {
+        result.totalText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+            result.taxText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+            result.subtotalText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+            result.date == nil &&
+            result.lineItems.isEmpty &&
+            result.text.components(separatedBy: .newlines).count < 4
+    }
+
     private func save() {
         guard proAccess.canAddReceipt(currentCount: store.receipts.count) else {
             showingPaywall = true
             return
         }
 
+        draft.reconcileAmountsKeepingTotal()
         duplicateCandidates = store.duplicateCandidates(for: draft)
         if !duplicateCandidates.isEmpty {
             showingDuplicateAlert = true
@@ -208,12 +307,7 @@ struct ScanView: View {
         }
 
         store.add(from: draft)
-        if continuousMode {
-            resetForNextReceipt()
-            activePickerSource = .camera
-        } else {
-            dismiss()
-        }
+        dismiss()
     }
 
     private func processSelectedImage(_ image: UIImage) {
@@ -227,21 +321,27 @@ struct ScanView: View {
                 selectedImage = processed.image
                 draft.imageData = processed.image.jpegData(compressionQuality: 0.88)
             }
-            recognize(processed.image)
+            recognize(processed.image, fallbackImage: image)
         }
-    }
-
-    private func resetForNextReceipt() {
-        draft = ReceiptDraft()
-        selectedImage = nil
-        originalImageForEditing = nil
-        processedImageForEditing = nil
-        processedAutoCropped = false
     }
 
     private func applyEditedImage(_ image: UIImage) {
         selectedImage = image
         draft.imageData = image.jpegData(compressionQuality: 0.88)
         recognize(image)
+    }
+
+    private func applyAIUnderstanding(from result: OCRResult) {
+        let understanding = ReceiptAIService.understand(result: result, currentDraft: draft)
+        draft.category = understanding.category
+        draft.reimbursementStatus = understanding.reimbursementStatus
+        if draft.notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            draft.notes = understanding.notes
+        }
+        draft.recognizedFieldKeys.insert("category")
+        if !draft.notes.isEmpty {
+            draft.recognizedFieldKeys.insert("notes")
+        }
+        draft.recognizedFieldKeys.insert("reimbursementStatus")
     }
 }

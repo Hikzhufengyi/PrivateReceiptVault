@@ -40,6 +40,7 @@
 		1A00003F2C00000100000001 /* ReceiptReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A00003F2B00000100000001 /* ReceiptReviewView.swift */; };
 		1A0000602C00000100000001 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1A0000602B00000100000001 /* LaunchScreen.storyboard */; };
 		1A0000612C00000100000001 /* AppStoreLinks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000612B00000100000001 /* AppStoreLinks.swift */; };
+		1A0000622C00000100000001 /* ReceiptAIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000622B00000100000001 /* ReceiptAIService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -95,6 +96,7 @@
 		1A00003F2B00000100000001 /* ReceiptReviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReceiptReviewView.swift; sourceTree = "<group>"; };
 		1A0000602B00000100000001 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 		1A0000612B00000100000001 /* AppStoreLinks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStoreLinks.swift; sourceTree = "<group>"; };
+		1A0000622B00000100000001 /* ReceiptAIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReceiptAIService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -109,41 +111,114 @@
 		1A0000112B00000100000001 /* PrivateReceiptVault */ = {
 			isa = PBXGroup;
 			children = (
+				1A0000702B00000100000001 /* App */,
+				1A0000712B00000100000001 /* Models */,
+				1A0000722B00000100000001 /* Stores */,
+				1A0000732B00000100000001 /* Services */,
+				1A0000742B00000100000001 /* Security */,
+				1A0000752B00000100000001 /* Views */,
+				1A0000762B00000100000001 /* Components */,
+				1A0000772B00000100000001 /* Integrations */,
+				1A0000782B00000100000001 /* Resources */,
+			);
+			path = PrivateReceiptVault;
+			sourceTree = "<group>";
+		};
+		1A0000702B00000100000001 /* App */ = {
+			isa = PBXGroup;
+			children = (
 				1A0000012B00000100000001 /* PrivateReceiptVaultApp.swift */,
-				1A0000022B00000100000001 /* Models.swift */,
-				1A0000032B00000100000001 /* ReceiptStore.swift */,
-				1A0000042B00000100000001 /* OCRService.swift */,
-				1A0000052B00000100000001 /* ImagePicker.swift */,
-				1A0000062B00000100000001 /* ShareSheet.swift */,
 				1A0000072B00000100000001 /* ContentView.swift */,
+				1A0000612B00000100000001 /* AppStoreLinks.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		1A0000712B00000100000001 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				1A0000022B00000100000001 /* Models.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		1A0000722B00000100000001 /* Stores */ = {
+			isa = PBXGroup;
+			children = (
+				1A0000032B00000100000001 /* ReceiptStore.swift */,
+			);
+			path = Stores;
+			sourceTree = "<group>";
+		};
+		1A0000732B00000100000001 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				1A0000042B00000100000001 /* OCRService.swift */,
+				1A0000132B00000100000001 /* ExportService.swift */,
+				1A0000372B00000100000001 /* ImageEnhancementService.swift */,
+				1A0000622B00000100000001 /* ReceiptAIService.swift */,
+				1A00003B2B00000100000001 /* StoreKitService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		1A0000742B00000100000001 /* Security */ = {
+			isa = PBXGroup;
+			children = (
+				1A00000E2B00000100000001 /* AppLock.swift */,
+				1A00003D2B00000100000001 /* BackupCrypto.swift */,
+				1A00000D2B00000100000001 /* ProAccess.swift */,
+			);
+			path = Security;
+			sourceTree = "<group>";
+		};
+		1A0000752B00000100000001 /* Views */ = {
+			isa = PBXGroup;
+			children = (
 				1A0000082B00000100000001 /* ScanView.swift */,
 				1A0000092B00000100000001 /* ReceiptFormView.swift */,
 				1A00000A2B00000100000001 /* ReceiptDetailView.swift */,
 				1A00000B2B00000100000001 /* SettingsView.swift */,
-				1A00000D2B00000100000001 /* ProAccess.swift */,
-				1A00000E2B00000100000001 /* AppLock.swift */,
 				1A00000F2B00000100000001 /* PaywallView.swift */,
-				1A0000132B00000100000001 /* ExportService.swift */,
+				1A0000382B00000100000001 /* ReportsView.swift */,
+				1A0000392B00000100000001 /* ExpenseReportsView.swift */,
+				1A00003C2B00000100000001 /* ReceiptImageEditorView.swift */,
+				1A00003E2B00000100000001 /* OnboardingView.swift */,
+				1A00003F2B00000100000001 /* ReceiptReviewView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		1A0000762B00000100000001 /* Components */ = {
+			isa = PBXGroup;
+			children = (
 				1A0000142B00000100000001 /* FilterBar.swift */,
 				1A00002F2B00000100000001 /* TrustBadgesView.swift */,
 				1A0000352B00000100000001 /* CurrencyPicker.swift */,
 				1A0000362B00000100000001 /* ExportOptionsView.swift */,
-				1A0000372B00000100000001 /* ImageEnhancementService.swift */,
-				1A0000382B00000100000001 /* ReportsView.swift */,
-				1A0000392B00000100000001 /* ExpenseReportsView.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		1A0000772B00000100000001 /* Integrations */ = {
+			isa = PBXGroup;
+			children = (
+				1A0000052B00000100000001 /* ImagePicker.swift */,
 				1A00003A2B00000100000001 /* DocumentPicker.swift */,
-				1A00003B2B00000100000001 /* StoreKitService.swift */,
-				1A00003C2B00000100000001 /* ReceiptImageEditorView.swift */,
-				1A00003D2B00000100000001 /* BackupCrypto.swift */,
-				1A0000612B00000100000001 /* AppStoreLinks.swift */,
-				1A00003E2B00000100000001 /* OnboardingView.swift */,
-				1A00003F2B00000100000001 /* ReceiptReviewView.swift */,
+				1A0000062B00000100000001 /* ShareSheet.swift */,
+			);
+			path = Integrations;
+			sourceTree = "<group>";
+		};
+		1A0000782B00000100000001 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
 				1A0000602B00000100000001 /* LaunchScreen.storyboard */,
 				1A0000152B00000100000001 /* Localizable.strings */,
 				1A0000162B00000100000001 /* InfoPlist.strings */,
 				1A00000C2B00000100000001 /* Assets.xcassets */,
 			);
-			path = PrivateReceiptVault;
+			name = Resources;
 			sourceTree = "<group>";
 		};
 		1A0000122B00000100000001 /* Products */ = {
@@ -262,6 +337,7 @@
 				1A00003C2C00000100000001 /* ReceiptImageEditorView.swift in Sources */,
 				1A00003D2C00000100000001 /* BackupCrypto.swift in Sources */,
 				1A0000612C00000100000001 /* AppStoreLinks.swift in Sources */,
+				1A0000622C00000100000001 /* ReceiptAIService.swift in Sources */,
 				1A00003E2C00000100000001 /* OnboardingView.swift in Sources */,
 				1A00003F2C00000100000001 /* ReceiptReviewView.swift in Sources */,
 			);

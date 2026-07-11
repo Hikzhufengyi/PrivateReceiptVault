@@ -65,13 +65,13 @@ struct SettingsView: View {
                 LocalDataFlowView()
 
                 Button {
-                    openExternalURL("https://hikzhufengyi.github.io/receipt-vault-site/privacy.html")
+                    openExternalURL("https://getreceiptvault.com/privacy")
                 } label: {
                     Label("Privacy Policy", systemImage: "hand.raised")
                 }
 
                 Button {
-                    openExternalURL("https://hikzhufengyi.github.io/receipt-vault-site/support.html")
+                    openExternalURL("https://getreceiptvault.com/support")
                 } label: {
                     Label("Support", systemImage: "questionmark.circle")
                 }

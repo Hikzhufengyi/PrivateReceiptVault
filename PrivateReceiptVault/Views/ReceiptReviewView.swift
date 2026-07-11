@@ -3,11 +3,11 @@ import SwiftUI
 struct ReceiptReviewView: View {
     @Binding var draft: ReceiptDraft
     let isRecognizing: Bool
+    var showsSaveButton = true
     let saveAction: () -> Void
 
     @State private var showingFullEdit = false
     @State private var showingFieldDetails = false
-    @State private var showingSourceText = false
     @State private var selectedFieldKey = "total"
     @FocusState private var focusedField: String?
 
@@ -28,103 +28,67 @@ struct ReceiptReviewView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack(alignment: .top, spacing: 12) {
-                ZStack {
-                    Circle()
-                        .stroke(.secondary.opacity(0.18), lineWidth: 7)
-                    Circle()
-                        .trim(from: 0, to: CGFloat(recognizedCount) / CGFloat(max(reviewFields.count, 1)))
-                        .stroke(.tint, style: StrokeStyle(lineWidth: 7, lineCap: .round))
-                        .rotationEffect(.degrees(-90))
-                    Text(completionText)
-                        .font(.caption.bold())
-                        .monospacedDigit()
-                }
-                .frame(width: 58, height: 58)
-
-                VStack(alignment: .leading, spacing: 5) {
-                    Text("Review OCR fields")
-                        .font(.headline)
-                    Text("Confirm the extracted fields before saving.")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 10) {
+                Label("检查 OCR 字段", systemImage: "text.viewfinder")
+                    .font(.headline)
                 Spacer()
-                if isRecognizing {
-                    ProgressView()
-                }
+                Text(completionText)
+                    .font(.caption.bold())
+                    .monospacedDigit()
+                    .foregroundStyle(.tint)
+                if isRecognizing { ProgressView().controlSize(.small) }
             }
 
             if needsAttentionCount > 0 {
-                HStack(alignment: .top, spacing: 10) {
+                HStack(spacing: 8) {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .foregroundStyle(.orange)
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text("Confirm highlighted fields")
-                            .font(.subheadline.weight(.semibold))
-                        Text("Low-confidence or missing values are marked before saving.")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
+                    Text("\(needsAttentionCount) 个字段需要确认")
+                        .font(.caption.weight(.semibold))
                     Spacer()
-                    Text("\(needsAttentionCount)")
-                        .font(.caption.bold())
-                        .foregroundStyle(.orange)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(.orange.opacity(0.12), in: Capsule())
                 }
-                .padding(10)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 8)
                 .background(.orange.opacity(0.08), in: RoundedRectangle(cornerRadius: 8))
             }
+
+            aiUnderstandingPanel
 
             quickCorrectionPanel
 
             DisclosureGroup(isExpanded: $showingFieldDetails) {
-                VStack(spacing: 10) {
+                VStack(spacing: 7) {
                     ForEach(reviewFields) { field in
                         ReviewFieldRow(field: field, isSelected: selectedFieldKey == field.key) {
                             selectedFieldKey = field.key
                         }
                     }
                 }
-                .padding(.top, 10)
+                .padding(.top, 8)
             } label: {
-                Label("Review extracted details", systemImage: "list.bullet.rectangle")
+                Label("更多 OCR 详情", systemImage: "list.bullet.rectangle")
                     .font(.subheadline.weight(.semibold))
             }
-            .padding(12)
+            .padding(10)
             .background(.secondary.opacity(0.07), in: RoundedRectangle(cornerRadius: 8))
 
-            DisclosureGroup(isExpanded: $showingSourceText) {
-                sourceLinesPanel
-                    .padding(.top, 10)
-            } label: {
-                Label("Possible source text", systemImage: "text.magnifyingglass")
-                    .font(.subheadline.weight(.semibold))
-            }
-            .padding(12)
-            .background(.secondary.opacity(0.07), in: RoundedRectangle(cornerRadius: 8))
+            if showsSaveButton {
+                HStack(spacing: 10) {
+                    editAllFieldsButton
 
-            HStack(spacing: 10) {
-                Button {
-                    showingFullEdit = true
-                } label: {
-                    Label("Edit all fields", systemImage: "square.and.pencil")
-                        .frame(maxWidth: .infinity)
+                    Button(action: saveAction) {
+                        Label("Save Receipt", systemImage: "checkmark.circle")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(!canSave)
                 }
-                .buttonStyle(.bordered)
-
-                Button(action: saveAction) {
-                    Label("Save Receipt", systemImage: "checkmark.circle")
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.borderedProminent)
-                .disabled(!canSave)
+            } else {
+                editAllFieldsButton
             }
         }
-        .padding(14)
+        .padding(12)
         .background(.background, in: RoundedRectangle(cornerRadius: 8))
         .sheet(isPresented: $showingFullEdit) {
             NavigationStack {
@@ -132,6 +96,7 @@ struct ReceiptReviewView: View {
                     ReceiptFormView(draft: $draft)
                         .padding()
                 }
+                .scrollDismissesKeyboard(.interactively)
                 .navigationTitle("Edit Receipt")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
@@ -143,18 +108,48 @@ struct ReceiptReviewView: View {
         }
     }
 
-    private var quickCorrectionPanel: some View {
-        VStack(alignment: .leading, spacing: 10) {
+    private var aiUnderstandingPanel: some View {
+        VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Label("Quick corrections", systemImage: "checklist.checked")
+                Label("AI 已理解收据内容", systemImage: "sparkles")
                     .font(.subheadline.weight(.semibold))
                 Spacer()
-                Text("On-device only")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.green)
             }
 
-            VStack(spacing: 10) {
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], alignment: .leading, spacing: 7) {
+                AIUnderstandingChip(title: "分类", value: draft.category.localizedName, systemImage: draft.category.systemImage, color: draft.category.color)
+                AIUnderstandingChip(title: "报销", value: draft.reimbursementStatus.localizedName, systemImage: "briefcase", color: draft.reimbursementStatus == .reimbursable ? .green : .secondary)
+            }
+
+            if !draft.notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                Label(draft.notes, systemImage: "note.text")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+        }
+        .padding(10)
+        .background(.tint.opacity(0.08), in: RoundedRectangle(cornerRadius: 8))
+    }
+
+    private var editAllFieldsButton: some View {
+        Button {
+            showingFullEdit = true
+        } label: {
+            Label("Edit all fields", systemImage: "square.and.pencil")
+                .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.bordered)
+    }
+
+    private var quickCorrectionPanel: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Label("快速修正", systemImage: "checklist.checked")
+                    .font(.subheadline.weight(.semibold))
+            }
+
+            VStack(spacing: 8) {
                 TextField("Merchant", text: $draft.merchant)
                     .textContentType(.organizationName)
                     .focused($focusedField, equals: "merchant")
@@ -162,17 +157,37 @@ struct ReceiptReviewView: View {
                 DatePicker("Date", selection: $draft.date, displayedComponents: .date)
 
                 HStack(spacing: 10) {
-                    TextField("Total", text: $draft.totalText)
+                    Picker("Category", selection: $draft.category) {
+                        ForEach(ReceiptCategory.allCases) { category in
+                            Text(category.localizedName).tag(category)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                    CurrencyPicker(currencyCode: $draft.currencyCode)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+
+                Picker("报销状态", selection: $draft.reimbursementStatus) {
+                    ForEach(ReimbursementStatus.allCases) { status in
+                        Text(status.localizedName).tag(status)
+                    }
+                }
+                .pickerStyle(.segmented)
+
+                HStack(spacing: 10) {
+                    TextField("实付金额", text: $draft.totalText)
                         .keyboardType(.decimalPad)
                         .focused($focusedField, equals: "total")
 
-                    TextField("Tax", text: $draft.taxText)
+                    TextField("税额", text: $draft.taxText)
                         .keyboardType(.decimalPad)
                         .focused($focusedField, equals: "tax")
                 }
 
                 HStack(spacing: 10) {
-                    TextField("Subtotal", text: $draft.subtotalText)
+                    TextField("小计/税前金额", text: $draft.subtotalText)
                         .keyboardType(.decimalPad)
                         .focused($focusedField, equals: "subtotal")
 
@@ -180,62 +195,25 @@ struct ReceiptReviewView: View {
                         .keyboardType(.decimalPad)
                         .focused($focusedField, equals: "tip")
                 }
+
+                TextField("AI 备注", text: $draft.notes, axis: .vertical)
+                    .lineLimit(1...2)
+                    .focused($focusedField, equals: "notes")
             }
             .textFieldStyle(.roundedBorder)
         }
-        .padding(12)
+        .padding(10)
         .background(.secondary.opacity(0.07), in: RoundedRectangle(cornerRadius: 8))
-    }
-
-    private var sourceLinesPanel: some View {
-        let field = reviewFields.first { $0.key == selectedFieldKey } ?? reviewFields.first
-        let lines = sourceLines(for: field?.key ?? "")
-
-        return VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Text("OCR lines")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.secondary)
-                Spacer()
-                if let field {
-                    Text(field.title)
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(field.status.color)
-                }
-            }
-
-            if lines.isEmpty {
-                Text("No matching OCR line found. Check the image or enter the value manually.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            } else {
-                VStack(spacing: 7) {
-                    ForEach(lines.prefix(4), id: \.self) { line in
-                        HStack(alignment: .top, spacing: 8) {
-                            Image(systemName: "quote.opening")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                            Text(line)
-                                .font(.caption.monospaced())
-                                .textSelection(.enabled)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                        }
-                        .padding(8)
-                        .background(.background, in: RoundedRectangle(cornerRadius: 8))
-                    }
-                }
-            }
-        }
     }
 
     private var reviewFields: [ReviewField] {
         [
             ReviewField(key: "merchant", title: "Merchant", value: draft.merchant, systemImage: "storefront", status: status(for: "merchant", value: draft.merchant)),
+            ReviewField(key: "category", title: "Category", value: draft.category.localizedName, systemImage: draft.category.systemImage, status: status(for: "category", value: draft.category == .other ? "" : draft.category.localizedName)),
             ReviewField(key: "date", title: "Date", value: draft.date.formatted(date: .abbreviated, time: .omitted), systemImage: "calendar", status: status(for: "date", value: draft.date.formatted(date: .abbreviated, time: .omitted))),
-            ReviewField(key: "total", title: "Total", value: currencyValue(draft.totalText), systemImage: "sum", status: status(for: "total", value: draft.totalText)),
-            ReviewField(key: "tax", title: "Tax", value: currencyValue(draft.taxText), systemImage: "percent", status: status(for: "tax", value: draft.taxText)),
-            ReviewField(key: "subtotal", title: "Subtotal", value: currencyValue(draft.subtotalText), systemImage: "list.bullet.rectangle", status: status(for: "subtotal", value: draft.subtotalText)),
+            ReviewField(key: "total", title: "实付金额", value: currencyValue(draft.totalText), systemImage: "sum", status: status(for: "total", value: draft.totalText)),
+            ReviewField(key: "tax", title: "税额", value: currencyValue(draft.taxText), systemImage: "percent", status: status(for: "tax", value: draft.taxText)),
+            ReviewField(key: "subtotal", title: "小计/税前金额", value: currencyValue(draft.subtotalText), systemImage: "list.bullet.rectangle", status: status(for: "subtotal", value: draft.subtotalText)),
             ReviewField(key: "paymentMethod", title: "Payment method", value: draft.paymentMethod, systemImage: "creditcard", status: status(for: "paymentMethod", value: draft.paymentMethod)),
             ReviewField(key: "cardLast4", title: "Card last 4", value: draft.cardLast4, systemImage: "number", status: status(for: "cardLast4", value: draft.cardLast4)),
             ReviewField(key: "receiptNumber", title: "Receipt number", value: draft.receiptNumber, systemImage: "number.square", status: status(for: "receiptNumber", value: draft.receiptNumber)),
@@ -258,69 +236,6 @@ struct ReceiptReviewView: View {
         return .recognized
     }
 
-    private func sourceLines(for key: String) -> [String] {
-        let lines = draft.recognizedText
-            .components(separatedBy: .newlines)
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
-        guard !lines.isEmpty else { return [] }
-
-        let keywords: [String]
-        switch key {
-        case "merchant":
-            let merchant = draft.merchant.lowercased()
-            return lines.filter { line in
-                let lower = line.lowercased()
-                return !merchant.isEmpty && (lower.contains(merchant) || merchant.contains(lower))
-            }.ifEmpty(Array(lines.prefix(3)))
-        case "date":
-            keywords = ["date", "time"]
-        case "total":
-            keywords = ["grand total", "amount due", "balance due", "total due", "total", "balance", "paid"]
-        case "tax":
-            keywords = ["sales tax", "tax", "vat", "gst", "hst", "pst"]
-        case "subtotal":
-            keywords = ["subtotal", "sub total", "sub-total", "net total", "amount"]
-        case "paymentMethod":
-            keywords = ["visa", "mastercard", "master card", "amex", "american express", "discover", "cash", "apple pay"]
-        case "cardLast4":
-            keywords = ["ending", "last 4", "card", "visa", "mastercard", "amex"]
-        case "receiptNumber":
-            keywords = ["receipt", "check", "order", "invoice"]
-        case "lineItems":
-            return lines.filter(\.containsAmount).prefixArray(4)
-        default:
-            keywords = []
-        }
-
-        let matches = lines.filter { line in
-            let lower = line.lowercased()
-            return keywords.contains { lower.contains($0) }
-        }
-        if !matches.isEmpty { return matches }
-
-        let value = valueForSourceLookup(key: key)
-            .lowercased()
-            .replacingOccurrences(of: ",", with: "")
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !value.isEmpty else { return [] }
-        return lines.filter { line in
-            line.lowercased().replacingOccurrences(of: ",", with: "").contains(value)
-        }
-    }
-
-    private func valueForSourceLookup(key: String) -> String {
-        switch key {
-        case "merchant": draft.merchant
-        case "total": draft.totalText
-        case "tax": draft.taxText
-        case "subtotal": draft.subtotalText
-        case "paymentMethod": draft.paymentMethod
-        case "cardLast4": draft.cardLast4
-        case "receiptNumber": draft.receiptNumber
-        default: ""
-        }
-    }
 }
 
 private struct ReviewField: Identifiable {
@@ -337,6 +252,54 @@ private struct ReviewField: Identifiable {
         self.value = value
         self.systemImage = systemImage
         self.status = status
+    }
+}
+
+private struct AIUnderstandingRow: View {
+    let title: String
+    let value: String
+    let systemImage: String
+    let color: Color
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: systemImage)
+                .foregroundStyle(color)
+                .frame(width: 24)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                Text(value)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.primary)
+                    .lineLimit(2)
+            }
+            Spacer()
+        }
+        .padding(10)
+        .background(.background, in: RoundedRectangle(cornerRadius: 8))
+    }
+}
+
+private struct AIUnderstandingChip: View {
+    let title: String
+    let value: String
+    let systemImage: String
+    let color: Color
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Image(systemName: systemImage)
+                .foregroundStyle(color)
+            Text("\(title)：\(value)")
+                .lineLimit(1)
+        }
+        .font(.caption.weight(.semibold))
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.background.opacity(0.75), in: RoundedRectangle(cornerRadius: 8))
     }
 }
 
