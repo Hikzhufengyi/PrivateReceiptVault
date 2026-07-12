@@ -95,8 +95,34 @@ struct CurrencyOption: Identifiable, Equatable {
                 "HKD",
                 "HK$",
                 "HK $",
+                "香港",
                 "港币",
                 "港幣",
+                "尖沙咀",
+                "旺角",
+                "油麻地",
+                "佐敦",
+                "中環",
+                "灣仔",
+                "銅鑼灣",
+                "九龍",
+                "新界",
+                "沙田",
+                "屯門",
+                "元朗",
+                "荃灣",
+                "觀塘",
+                "深水埗",
+                "鰂魚涌",
+                "筲箕灣",
+                "漆咸道",
+                "HONG KONG",
+                "KOWLOON",
+                "TSIM SHA TSUI",
+                "MONG KOK",
+                "CENTRAL",
+                "WAN CHAI",
+                "CAUSEWAY BAY",
                 "HONG KONG DOLLAR"
             ]
         ),
@@ -447,6 +473,12 @@ struct CurrencyOption: Identifiable, Equatable {
 
     static func code(for text: String) -> String? {
         let normalizedText = text.uppercased()
+        if text.contains("¥") || text.contains("￥") {
+            let japaneseSignals = ["日本", "税込", "税抜", "消費税", "内税", "外税", "現金", "釣銭", "お釣り", "預り", "お預り", "円", "県", "郡", "村", "町", "白川郷", "民芸品店"]
+            if japaneseSignals.contains(where: { text.localizedCaseInsensitiveContains($0) }) {
+                return "JPY"
+            }
+        }
         let tokenPairs = pool
             .flatMap { option in option.ocrTokens.map { (code: option.code, token: $0.uppercased()) } }
             .filter { !$0.token.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
@@ -643,14 +675,27 @@ struct ReceiptDraft {
     mutating func reconcileAmountsKeepingTotal() {
         guard total > Decimal.zero else { return }
 
+        if let tax, tax < Decimal.zero || tax > total * Decimal(string: "0.30")! {
+            taxText = ""
+            lowConfidenceFieldKeys.insert("tax")
+        }
+
         let tipAmount = tip ?? Decimal.zero
         if let subtotal, let tax, amountsMatch(total, subtotal + tax + tipAmount) {
             return
         }
 
-        if let subtotal, tax != nil {
+        if let subtotal, let tax,
+           amountsMatch(subtotal, tax),
+           subtotal < total * Decimal(string: "0.50")! {
+            subtotalText = Self.currencyText(total)
+            lowConfidenceFieldKeys.insert("subtotal")
+            return
+        }
+
+        if let subtotal, tax == nil, subtotal <= total {
             let inferredTax = total - subtotal - tipAmount
-            if inferredTax >= Decimal.zero {
+            if inferredTax >= Decimal.zero, inferredTax <= total * Decimal(string: "0.30")! {
                 taxText = Self.currencyText(inferredTax)
                 lowConfidenceFieldKeys.insert("tax")
                 return
@@ -658,6 +703,9 @@ struct ReceiptDraft {
         }
 
         if let tax {
+            if let subtotal, subtotal > total {
+                return
+            }
             let inferredSubtotal = total - tax - tipAmount
             if inferredSubtotal >= Decimal.zero {
                 subtotalText = Self.currencyText(inferredSubtotal)

@@ -13,15 +13,15 @@
 		1A0000042C00000100000001 /* OCRService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000042B00000100000001 /* OCRService.swift */; };
 		1A0000052C00000100000001 /* ImagePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000052B00000100000001 /* ImagePicker.swift */; };
 		1A0000062C00000100000001 /* ShareSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000062B00000100000001 /* ShareSheet.swift */; };
-		1A0000072C00000100000001 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000072B00000100000001 /* ContentView.swift */; };
-		1A0000082C00000100000001 /* ScanView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000082B00000100000001 /* ScanView.swift */; };
-		1A0000092C00000100000001 /* ReceiptFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000092B00000100000001 /* ReceiptFormView.swift */; };
-		1A00000A2C00000100000001 /* ReceiptDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A00000A2B00000100000001 /* ReceiptDetailView.swift */; };
-		1A00000B2C00000100000001 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A00000B2B00000100000001 /* SettingsView.swift */; };
+		1A0000072C00000100000001 /* HomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000072B00000100000001 /* HomeViewController.swift */; };
+		1A0000082C00000100000001 /* AddGuideViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000082B00000100000001 /* AddGuideViewController.swift */; };
+		1A0000092C00000100000001 /* AddViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000092B00000100000001 /* AddViewController.swift */; };
+		1A00000A2C00000100000001 /* DetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A00000A2B00000100000001 /* DetailViewController.swift */; };
+		1A00000B2C00000100000001 /* SettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A00000B2B00000100000001 /* SettingsViewController.swift */; };
 		1A00000C2C00000100000001 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1A00000C2B00000100000001 /* Assets.xcassets */; };
 		1A00000D2C00000100000001 /* ProAccess.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A00000D2B00000100000001 /* ProAccess.swift */; };
 		1A00000E2C00000100000001 /* AppLock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A00000E2B00000100000001 /* AppLock.swift */; };
-		1A00000F2C00000100000001 /* PaywallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A00000F2B00000100000001 /* PaywallView.swift */; };
+		1A00000F2C00000100000001 /* PaywallViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A00000F2B00000100000001 /* PaywallViewController.swift */; };
 		1A0000132C00000100000001 /* ExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000132B00000100000001 /* ExportService.swift */; };
 		1A0000142C00000100000001 /* FilterBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000142B00000100000001 /* FilterBar.swift */; };
 		1A0000152C00000100000001 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 1A0000152B00000100000001 /* Localizable.strings */; };
@@ -30,17 +30,19 @@
 		1A0000352C00000100000001 /* CurrencyPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000352B00000100000001 /* CurrencyPicker.swift */; };
 		1A0000362C00000100000001 /* ExportOptionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000362B00000100000001 /* ExportOptionsView.swift */; };
 		1A0000372C00000100000001 /* ImageEnhancementService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000372B00000100000001 /* ImageEnhancementService.swift */; };
-		1A0000382C00000100000001 /* ReportsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000382B00000100000001 /* ReportsView.swift */; };
-		1A0000392C00000100000001 /* ExpenseReportsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000392B00000100000001 /* ExpenseReportsView.swift */; };
+		1A0000382C00000100000001 /* InsightsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000382B00000100000001 /* InsightsViewController.swift */; };
+		1A0000392C00000100000001 /* ExpenseReportsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000392B00000100000001 /* ExpenseReportsViewController.swift */; };
 		1A00003A2C00000100000001 /* DocumentPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A00003A2B00000100000001 /* DocumentPicker.swift */; };
 		1A00003B2C00000100000001 /* StoreKitService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A00003B2B00000100000001 /* StoreKitService.swift */; };
-		1A00003C2C00000100000001 /* ReceiptImageEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A00003C2B00000100000001 /* ReceiptImageEditorView.swift */; };
+		1A00003C2C00000100000001 /* ImageEditorViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A00003C2B00000100000001 /* ImageEditorViewController.swift */; };
 		1A00003D2C00000100000001 /* BackupCrypto.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A00003D2B00000100000001 /* BackupCrypto.swift */; };
-		1A00003E2C00000100000001 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A00003E2B00000100000001 /* OnboardingView.swift */; };
-		1A00003F2C00000100000001 /* ReceiptReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A00003F2B00000100000001 /* ReceiptReviewView.swift */; };
+		1A00003E2C00000100000001 /* OnboardingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A00003E2B00000100000001 /* OnboardingViewController.swift */; };
+		1A00003F2C00000100000001 /* AddReviewViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A00003F2B00000100000001 /* AddReviewViewController.swift */; };
 		1A0000602C00000100000001 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1A0000602B00000100000001 /* LaunchScreen.storyboard */; };
 		1A0000612C00000100000001 /* AppStoreLinks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000612B00000100000001 /* AppStoreLinks.swift */; };
 		1A0000622C00000100000001 /* ReceiptAIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000622B00000100000001 /* ReceiptAIService.swift */; };
+		1A0000632C00000100000001 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000632B00000100000001 /* Theme.swift */; };
+		1A0000642C00000100000001 /* AllReceiptsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000642B00000100000001 /* AllReceiptsViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -51,15 +53,15 @@
 		1A0000042B00000100000001 /* OCRService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OCRService.swift; sourceTree = "<group>"; };
 		1A0000052B00000100000001 /* ImagePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagePicker.swift; sourceTree = "<group>"; };
 		1A0000062B00000100000001 /* ShareSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareSheet.swift; sourceTree = "<group>"; };
-		1A0000072B00000100000001 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
-		1A0000082B00000100000001 /* ScanView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanView.swift; sourceTree = "<group>"; };
-		1A0000092B00000100000001 /* ReceiptFormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReceiptFormView.swift; sourceTree = "<group>"; };
-		1A00000A2B00000100000001 /* ReceiptDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReceiptDetailView.swift; sourceTree = "<group>"; };
-		1A00000B2B00000100000001 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		1A0000072B00000100000001 /* HomeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewController.swift; sourceTree = "<group>"; };
+		1A0000082B00000100000001 /* AddGuideViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddGuideViewController.swift; sourceTree = "<group>"; };
+		1A0000092B00000100000001 /* AddViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddViewController.swift; sourceTree = "<group>"; };
+		1A00000A2B00000100000001 /* DetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailViewController.swift; sourceTree = "<group>"; };
+		1A00000B2B00000100000001 /* SettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewController.swift; sourceTree = "<group>"; };
 		1A00000C2B00000100000001 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		1A00000D2B00000100000001 /* ProAccess.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProAccess.swift; sourceTree = "<group>"; };
 		1A00000E2B00000100000001 /* AppLock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLock.swift; sourceTree = "<group>"; };
-		1A00000F2B00000100000001 /* PaywallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallView.swift; sourceTree = "<group>"; };
+		1A00000F2B00000100000001 /* PaywallViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallViewController.swift; sourceTree = "<group>"; };
 		1A0000132B00000100000001 /* ExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportService.swift; sourceTree = "<group>"; };
 		1A0000142B00000100000001 /* FilterBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterBar.swift; sourceTree = "<group>"; };
 		1A0000172B00000100000001 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -86,17 +88,19 @@
 		1A0000352B00000100000001 /* CurrencyPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrencyPicker.swift; sourceTree = "<group>"; };
 		1A0000362B00000100000001 /* ExportOptionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportOptionsView.swift; sourceTree = "<group>"; };
 		1A0000372B00000100000001 /* ImageEnhancementService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageEnhancementService.swift; sourceTree = "<group>"; };
-		1A0000382B00000100000001 /* ReportsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportsView.swift; sourceTree = "<group>"; };
-		1A0000392B00000100000001 /* ExpenseReportsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpenseReportsView.swift; sourceTree = "<group>"; };
+		1A0000382B00000100000001 /* InsightsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightsViewController.swift; sourceTree = "<group>"; };
+		1A0000392B00000100000001 /* ExpenseReportsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpenseReportsViewController.swift; sourceTree = "<group>"; };
 		1A00003A2B00000100000001 /* DocumentPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentPicker.swift; sourceTree = "<group>"; };
 		1A00003B2B00000100000001 /* StoreKitService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreKitService.swift; sourceTree = "<group>"; };
-		1A00003C2B00000100000001 /* ReceiptImageEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReceiptImageEditorView.swift; sourceTree = "<group>"; };
+		1A00003C2B00000100000001 /* ImageEditorViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageEditorViewController.swift; sourceTree = "<group>"; };
 		1A00003D2B00000100000001 /* BackupCrypto.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupCrypto.swift; sourceTree = "<group>"; };
-		1A00003E2B00000100000001 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
-		1A00003F2B00000100000001 /* ReceiptReviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReceiptReviewView.swift; sourceTree = "<group>"; };
+		1A00003E2B00000100000001 /* OnboardingViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewController.swift; sourceTree = "<group>"; };
+		1A00003F2B00000100000001 /* AddReviewViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddReviewViewController.swift; sourceTree = "<group>"; };
 		1A0000602B00000100000001 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 		1A0000612B00000100000001 /* AppStoreLinks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStoreLinks.swift; sourceTree = "<group>"; };
 		1A0000622B00000100000001 /* ReceiptAIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReceiptAIService.swift; sourceTree = "<group>"; };
+		1A0000632B00000100000001 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		1A0000642B00000100000001 /* AllReceiptsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AllReceiptsViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -128,8 +132,8 @@
 			isa = PBXGroup;
 			children = (
 				1A0000012B00000100000001 /* PrivateReceiptVaultApp.swift */,
-				1A0000072B00000100000001 /* ContentView.swift */,
 				1A0000612B00000100000001 /* AppStoreLinks.swift */,
+				1A0000632B00000100000001 /* Theme.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -175,16 +179,18 @@
 		1A0000752B00000100000001 /* Views */ = {
 			isa = PBXGroup;
 			children = (
-				1A0000082B00000100000001 /* ScanView.swift */,
-				1A0000092B00000100000001 /* ReceiptFormView.swift */,
-				1A00000A2B00000100000001 /* ReceiptDetailView.swift */,
-				1A00000B2B00000100000001 /* SettingsView.swift */,
-				1A00000F2B00000100000001 /* PaywallView.swift */,
-				1A0000382B00000100000001 /* ReportsView.swift */,
-				1A0000392B00000100000001 /* ExpenseReportsView.swift */,
-				1A00003C2B00000100000001 /* ReceiptImageEditorView.swift */,
-				1A00003E2B00000100000001 /* OnboardingView.swift */,
-				1A00003F2B00000100000001 /* ReceiptReviewView.swift */,
+				1A0000072B00000100000001 /* HomeViewController.swift */,
+				1A0000642B00000100000001 /* AllReceiptsViewController.swift */,
+				1A0000082B00000100000001 /* AddGuideViewController.swift */,
+				1A0000092B00000100000001 /* AddViewController.swift */,
+				1A00000A2B00000100000001 /* DetailViewController.swift */,
+				1A00000B2B00000100000001 /* SettingsViewController.swift */,
+				1A00000F2B00000100000001 /* PaywallViewController.swift */,
+				1A0000382B00000100000001 /* InsightsViewController.swift */,
+				1A0000392B00000100000001 /* ExpenseReportsViewController.swift */,
+				1A00003C2B00000100000001 /* ImageEditorViewController.swift */,
+				1A00003E2B00000100000001 /* OnboardingViewController.swift */,
+				1A00003F2B00000100000001 /* AddReviewViewController.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -316,30 +322,32 @@
 				1A0000042C00000100000001 /* OCRService.swift in Sources */,
 				1A0000052C00000100000001 /* ImagePicker.swift in Sources */,
 				1A0000062C00000100000001 /* ShareSheet.swift in Sources */,
-				1A0000072C00000100000001 /* ContentView.swift in Sources */,
-				1A0000082C00000100000001 /* ScanView.swift in Sources */,
-				1A0000092C00000100000001 /* ReceiptFormView.swift in Sources */,
-				1A00000A2C00000100000001 /* ReceiptDetailView.swift in Sources */,
-				1A00000B2C00000100000001 /* SettingsView.swift in Sources */,
+				1A0000072C00000100000001 /* HomeViewController.swift in Sources */,
+				1A0000082C00000100000001 /* AddGuideViewController.swift in Sources */,
+				1A0000092C00000100000001 /* AddViewController.swift in Sources */,
+				1A00000A2C00000100000001 /* DetailViewController.swift in Sources */,
+				1A00000B2C00000100000001 /* SettingsViewController.swift in Sources */,
 				1A00000D2C00000100000001 /* ProAccess.swift in Sources */,
 				1A00000E2C00000100000001 /* AppLock.swift in Sources */,
-				1A00000F2C00000100000001 /* PaywallView.swift in Sources */,
+				1A00000F2C00000100000001 /* PaywallViewController.swift in Sources */,
 				1A0000132C00000100000001 /* ExportService.swift in Sources */,
 				1A0000142C00000100000001 /* FilterBar.swift in Sources */,
 				1A00002F2C00000100000001 /* TrustBadgesView.swift in Sources */,
 				1A0000352C00000100000001 /* CurrencyPicker.swift in Sources */,
 				1A0000362C00000100000001 /* ExportOptionsView.swift in Sources */,
 				1A0000372C00000100000001 /* ImageEnhancementService.swift in Sources */,
-				1A0000382C00000100000001 /* ReportsView.swift in Sources */,
-				1A0000392C00000100000001 /* ExpenseReportsView.swift in Sources */,
+				1A0000382C00000100000001 /* InsightsViewController.swift in Sources */,
+				1A0000392C00000100000001 /* ExpenseReportsViewController.swift in Sources */,
 				1A00003A2C00000100000001 /* DocumentPicker.swift in Sources */,
 				1A00003B2C00000100000001 /* StoreKitService.swift in Sources */,
-				1A00003C2C00000100000001 /* ReceiptImageEditorView.swift in Sources */,
+				1A00003C2C00000100000001 /* ImageEditorViewController.swift in Sources */,
 				1A00003D2C00000100000001 /* BackupCrypto.swift in Sources */,
 				1A0000612C00000100000001 /* AppStoreLinks.swift in Sources */,
 				1A0000622C00000100000001 /* ReceiptAIService.swift in Sources */,
-				1A00003E2C00000100000001 /* OnboardingView.swift in Sources */,
-				1A00003F2C00000100000001 /* ReceiptReviewView.swift in Sources */,
+				1A0000632C00000100000001 /* Theme.swift in Sources */,
+				1A0000642C00000100000001 /* AllReceiptsViewController.swift in Sources */,
+				1A00003E2C00000100000001 /* OnboardingViewController.swift in Sources */,
+				1A00003F2C00000100000001 /* AddReviewViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

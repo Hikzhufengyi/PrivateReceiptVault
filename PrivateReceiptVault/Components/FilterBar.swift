@@ -28,6 +28,10 @@ enum ReceiptReimbursementFilter: String, CaseIterable, Identifiable {
     case reimbursed = "已报销"
 
     var id: String { rawValue }
+
+    var localizedName: String {
+        String(localized: String.LocalizationValue(rawValue))
+    }
 }
 
 struct FilterBar: View {
@@ -75,7 +79,7 @@ struct FilterBar: View {
 
             Picker("Reimbursement", selection: $reimbursementFilter) {
                 ForEach(ReceiptReimbursementFilter.allCases) { filter in
-                    Text(filter.rawValue).tag(filter)
+                    Text(filter.localizedName).tag(filter)
                 }
             }
             .pickerStyle(.segmented)

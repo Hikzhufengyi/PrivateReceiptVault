@@ -174,6 +174,10 @@ enum OCRService {
         if containsAnyKeyword(["balance"], in: result.text) { score += 20 }
         if containsAnyKeyword(["sales tax"], in: result.text) { score += 20 }
         if containsAnyKeyword(["sub-total", "subtotal"], in: result.text) { score += 20 }
+        let balancedSummaryScore = bestStackedSummaryBalanceScore(in: result.text.components(separatedBy: .newlines))
+        if balancedSummaryScore > 0 {
+            score += 120 + min(balancedSummaryScore, 120)
+        }
         if result.date != nil { score += 45 }
         if !result.merchant.isEmpty { score += 35 }
         if !result.transactionID.isEmpty || !result.receiptNumber.isEmpty { score += 20 }
@@ -201,6 +205,7 @@ enum OCRService {
     private static func guessTotal(from lines: [String]) -> String {
         positiveReceiptTotal(
             chineseCommercePaidAmount(from: lines) ??
+            zeroDecimalTenderChangeTotal(from: lines) ??
             stackedSummaryAmount(.total, from: lines) ??
             amountForKeywords(Self.totalKeywords, from: lines, excluding: Self.nonTotalKeywords) ??
             amountAfterStandaloneTotalLabel(from: lines) ??
@@ -209,8 +214,9 @@ enum OCRService {
     }
 
     private static func guessTax(from lines: [String]) -> String {
-        stackedSummaryAmount(.tax, from: lines) ??
-            amountForKeywords(Self.taxKeywords, from: lines, excluding: Self.nonAmountTaxKeywords) ?? ""
+        zeroDecimalTaxAmountNearRate(from: lines) ??
+            stackedSummaryAmount(.tax, from: lines) ??
+            amountForKeywords(Self.taxKeywords, from: lines, excluding: Self.nonAmountTaxKeywords, skipping: isTaxRateOnlyLine) ?? ""
     }
 
     private static func positiveReceiptTotal(_ text: String) -> String {
@@ -231,12 +237,12 @@ enum OCRService {
         }.first ?? ""
     }
 
-    private static func amountForKeywords(_ keywords: [String], from lines: [String], excluding excludedKeywords: [String] = []) -> String? {
+    private static func amountForKeywords(_ keywords: [String], from lines: [String], excluding excludedKeywords: [String] = [], skipping shouldSkipLine: (String) -> Bool = { _ in false }) -> String? {
         let candidates = lines.enumerated().filter { _, line in
             let isExcluded = excludedKeywords.contains { keyword in
                 lineMatchesKeyword(line, keyword)
             }
-            return !isExcluded && keywords.contains { keyword in
+            return !isExcluded && !shouldSkipLine(line) && keywords.contains { keyword in
                 lineMatchesKeyword(line, keyword)
             }
         }
@@ -247,6 +253,9 @@ enum OCRService {
             for nearbyLine in lines.dropFirst(index + 1).prefix(4) {
                 if containsAnyKeyword(Self.moneyBoundaryKeywords, in: nearbyLine) {
                     break
+                }
+                if shouldSkipLine(nearbyLine) {
+                    continue
                 }
                 if let value = amount(in: nearbyLine) {
                     return value
@@ -280,8 +289,7 @@ enum OCRService {
 
     private static func stackedSummaryAmount(_ field: SummaryField, from lines: [String]) -> String? {
         for block in stackedMoneyLabelBlocks(in: lines).reversed() {
-            let trailingAmounts = lines
-                .dropFirst(block.endIndex + 1)
+            let trailingAmounts = summaryTrailingAmountLines(after: block.endIndex, in: lines)
                 .compactMap(amount(in:))
             guard trailingAmounts.count >= block.labels.count else { continue }
 
@@ -297,19 +305,40 @@ enum OCRService {
         return nil
     }
 
+    private static func summaryTrailingAmountLines(after labelEndIndex: Int, in lines: [String]) -> [String] {
+        var collected: [String] = []
+        for line in lines.dropFirst(labelEndIndex + 1) {
+            if containsAnyKeyword(Self.paymentBoundaryKeywords, in: line) {
+                break
+            }
+            if isTaxRateOnlyLine(line) || containsAnyKeyword(Self.nonSummaryTaxLines, in: line) {
+                continue
+            }
+            collected.append(line)
+        }
+        return collected
+    }
+
     private static func summaryAmountWindow(for labels: [SummaryField], in amounts: [String]) -> [String] {
         guard amounts.count > labels.count else {
             return amounts
         }
 
-        let windows = (0...(amounts.count - labels.count)).map { startIndex in
-            Array(amounts[startIndex..<(startIndex + labels.count)])
-        }
+        let windows = summaryAmountWindows(for: labels, in: amounts)
         if let balancedWindow = windows.max(by: { summaryBalanceScore(labels: labels, amounts: $0) < summaryBalanceScore(labels: labels, amounts: $1) }),
            summaryBalanceScore(labels: labels, amounts: balancedWindow) > 0 {
             return balancedWindow
         }
-        return Array(amounts.suffix(labels.count))
+        return Array(amounts.prefix(labels.count))
+    }
+
+    private static func summaryAmountWindows(for labels: [SummaryField], in amounts: [String]) -> [[String]] {
+        guard amounts.count > labels.count else {
+            return [amounts]
+        }
+        return (0...(amounts.count - labels.count)).map { startIndex in
+            Array(amounts[startIndex..<(startIndex + labels.count)])
+        }
     }
 
     private static func summaryBalanceScore(labels: [SummaryField], amounts: [String]) -> Int {
@@ -343,6 +372,20 @@ enum OCRService {
             return 100 + totalIndex + cents
         }
         return 0
+    }
+
+    private static func bestStackedSummaryBalanceScore(in lines: [String]) -> Int {
+        stackedMoneyLabelBlocks(in: lines)
+            .compactMap { block -> Int? in
+                let trailingAmounts = summaryTrailingAmountLines(after: block.endIndex, in: lines)
+                    .compactMap(amount(in:))
+                guard trailingAmounts.count >= block.labels.count else { return nil }
+                let maxScore = summaryAmountWindows(for: block.labels, in: trailingAmounts)
+                    .map { summaryBalanceScore(labels: block.labels, amounts: $0) }
+                    .max() ?? 0
+                return maxScore > 0 ? maxScore : nil
+            }
+            .max() ?? 0
     }
 
     private static func absDecimal(_ value: Decimal) -> Decimal {
@@ -407,7 +450,7 @@ enum OCRService {
         if containsAnyKeyword(Self.subtotalKeywords, in: line) {
             return .subtotal
         }
-        if containsAnyKeyword(Self.totalKeywords + ["amount"], in: line) {
+        if containsAnyKeyword(Self.totalKeywords, in: line) {
             return .total
         }
         return nil
@@ -484,7 +527,7 @@ enum OCRService {
     }
 
     private static func largestAmount(from lines: [String]) -> String? {
-        lines
+        linesBeforePaymentBoundary(lines)
             .compactMap { amount(in: $0) }
             .compactMap { value -> (text: String, amount: Decimal)? in
                 guard let amount = DecimalParser.parse(value) else { return nil }
@@ -494,11 +537,65 @@ enum OCRService {
             .text
     }
 
+    private static func linesBeforePaymentBoundary(_ lines: [String]) -> [String] {
+        var collected: [String] = []
+        for line in lines {
+            if containsAnyKeyword(Self.paymentBoundaryKeywords, in: line) {
+                break
+            }
+            collected.append(line)
+        }
+        return collected
+    }
+
+    private static func zeroDecimalTenderChangeTotal(from lines: [String]) -> String? {
+        guard CurrencyOption.code(for: lines.joined(separator: "\n")) == "JPY" else { return nil }
+        let amounts = lines.compactMap { amount(in: $0) }
+            .compactMap { text -> (text: String, value: Decimal)? in
+                guard let value = DecimalParser.parse(text), value > Decimal.zero else { return nil }
+                return (text, value)
+            }
+        guard amounts.count >= 3 else { return nil }
+
+        for paidIndex in amounts.indices.reversed() {
+            let paid = amounts[paidIndex]
+            for changeIndex in amounts.indices.reversed() where changeIndex > paidIndex {
+                let change = amounts[changeIndex]
+                let expectedTotal = paid.value - change.value
+                guard expectedTotal > Decimal.zero else { continue }
+                if let total = amounts[..<paidIndex].last(where: { amountsMatch($0.value, expectedTotal) }) {
+                    return total.text
+                }
+            }
+        }
+        return nil
+    }
+
+    private static func zeroDecimalTaxAmountNearRate(from lines: [String]) -> String? {
+        guard CurrencyOption.code(for: lines.joined(separator: "\n")) == "JPY" else { return nil }
+        for (index, line) in lines.enumerated() where line.range(of: #"\d{1,2}(?:[.]\d+)?\s*%"#, options: .regularExpression) != nil {
+            let nearbyLines = lines.dropFirst(index + 1).prefix(3)
+            for nearbyLine in nearbyLines {
+                guard let value = amount(in: nearbyLine),
+                      let tax = DecimalParser.parse(value),
+                      tax > Decimal.zero else { continue }
+                return value
+            }
+        }
+        return nil
+    }
+
+    private static func amountsMatch(_ lhs: Decimal, _ rhs: Decimal) -> Bool {
+        let tolerance = Decimal(string: "0.02")!
+        let difference = lhs - rhs
+        return (difference < Decimal.zero ? -difference : difference) <= tolerance
+    }
+
     private static let fieldPool: [ReceiptFieldToken] = [
         ReceiptFieldToken(
             field: .total,
             tokens: [
-                "TOTAL", "GRAND TOTAL", "AMOUNT DUE", "BALANCE DUE", "TOTAL DUE", "NET TOTAL", "PAYABLE",
+                "TOTAL", "TOTA", "TOT", "TOKAL", "TOTI", "GRAND TOTAL", "AMOUNT DUE", "BALANCE DUE", "TOTAL DUE", "NET TOTAL", "PAYABLE",
                 "合計", "合 計", "支払金額", "お買上金額", "現計", "現金合計",
                 "合计", "總計", "应付", "应付金额", "支付金额",
                 "實付款", "实付款", "應付", "应付款", "應付款", "付款金额", "订单金额", "BALANCE", "SUM", "PAID",
@@ -514,7 +611,7 @@ enum OCRService {
                 "小計", "小 計", "商品計",
                 "小计", "小計", "商品合计", "税前金额", "未税金额",
                 "SUB TTL", "SUBTTL", "SUB TOT", "ZWISCHENSUMME", "SOUS-TOTAL", "SUBTOTALE", "SUB-TOTAAL", "SUBTOTAAL",
-                "商品总价", "소계", "المجموع الفرعي"
+                "商品总价", "内税対象計", "内税対象", "対象計", "課税対象計", "象計", "소계", "المجموع الفرعي"
             ]
         ),
         ReceiptFieldToken(
@@ -583,6 +680,19 @@ enum OCRService {
     private static let nonAmountTaxKeywords = nonSummaryTaxLines + taxableBaseKeywords + [
         "tax invoice", "tax id", "tax inv", "tax. inv", "tax no", "tax number"
     ]
+
+    private static func isTaxRateOnlyLine(_ line: String) -> Bool {
+        guard containsAnyKeyword(Self.taxKeywords, in: line),
+              line.range(of: #"(?i)\b(vat|tax|gst|iva|tva)\b"#, options: .regularExpression) != nil else {
+            return false
+        }
+        let withoutPercentRate = line.replacingOccurrences(
+            of: #"\d{1,2}(?:[.,:]\d{1,4})?\s*(?:%|％|9|90|86|96|009|0086|0090|0096)"#,
+            with: "",
+            options: [.regularExpression, .caseInsensitive]
+        )
+        return amount(in: withoutPercentRate) == nil
+    }
 
     private static let nonTotalKeywords = subtotalKeywords + taxKeywords + tipKeywords + discountKeywords + paymentBoundaryKeywords + [
         "change"
@@ -679,6 +789,9 @@ enum OCRService {
             .replacingOccurrences(of: " ", with: "")
             .replacingOccurrences(of: "\u{00a0}", with: "")
             .trimmingCharacters(in: .whitespacesAndNewlines)
+        if hasCurrencySymbol, !usesMinorUnits {
+            return cleaned.replacingOccurrences(of: ",", with: "").replacingOccurrences(of: ".", with: "")
+        }
         if cleaned.contains(","), !cleaned.contains(".") {
             let parts = cleaned.split(separator: ",", omittingEmptySubsequences: false)
             if parts.count == 2, let fraction = parts.last, (1...2).contains(fraction.count) {
@@ -825,6 +938,12 @@ enum OCRService {
             return true
         }
 
+        if keywordWords.count == 1,
+           keywordWords[0].count <= 2,
+           containsCJK(in: keywordWords[0]) {
+            return false
+        }
+
         for startIndex in 0...(lineWords.count - keywordWords.count) {
             let candidate = Array(lineWords[startIndex..<(startIndex + keywordWords.count)])
             let matches = zip(candidate, keywordWords).allSatisfy { word, expected in
@@ -840,6 +959,14 @@ enum OCRService {
         let compactKeyword = keywordWords.joined()
         return compactLine.contains(compactKeyword) ||
             editDistance(compactLine, compactKeyword) <= max(1, compactKeyword.count / 4)
+    }
+
+    private static func containsCJK(in text: String) -> Bool {
+        text.unicodeScalars.contains { scalar in
+            (0x4E00...0x9FFF).contains(Int(scalar.value)) ||
+                (0x3040...0x30FF).contains(Int(scalar.value)) ||
+                (0x3400...0x4DBF).contains(Int(scalar.value))
+        }
     }
 
     private static func canonicalWords(in text: String) -> [String] {
@@ -984,9 +1111,6 @@ enum OCRService {
     private static func guessCurrencyCode(from text: String) -> String? {
         if let code = CurrencyOption.code(for: text) {
             return code
-        }
-        if text.range(of: #"\d+[.]\d{2}"#, options: .regularExpression) != nil {
-            return "USD"
         }
         return nil
     }

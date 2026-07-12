@@ -17,7 +17,7 @@ struct PrivateReceiptVaultApp: App {
                     if hasCompletedOnboarding {
                         RootTabView()
                     } else {
-                        OnboardingView {
+                        OnboardingViewController {
                             hasCompletedOnboarding = true
                         }
                     }
@@ -57,7 +57,7 @@ struct AppLockContainer<Content: View>: View {
     var body: some View {
         content
             .fullScreenCover(isPresented: lockPresentation) {
-                LockScreenView()
+                LockViewController()
                     .interactiveDismissDisabled(true)
             }
     }
@@ -77,17 +77,17 @@ struct AppLockContainer<Content: View>: View {
 struct RootTabView: View {
     var body: some View {
         TabView {
-            ContentView()
+            HomeViewController()
                 .tabItem {
                     Label("Receipts", systemImage: "doc.text.viewfinder")
                 }
 
-            ExpenseReportsView()
+            ExpenseReportsViewController()
                 .tabItem {
                     Label("Packets", systemImage: "folder")
                 }
 
-            ReportsView()
+            InsightsViewController()
                 .tabItem {
                     Label("Insights", systemImage: "chart.pie")
                 }

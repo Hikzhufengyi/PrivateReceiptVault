@@ -30,6 +30,8 @@ Pro unlocks:
 ## Before Release
 
 - Bundle identifier is set to `com.hikzhufengyi.receiptvault`.
+- Increment `MARKETING_VERSION` by `0.1` for each upload, using one decimal place. For example: `1.9 -> 2.0`, `2.0 -> 2.1`.
+- Set `CURRENT_PROJECT_VERSION` to the upload date in `yyyyMMdd` format. For example: `20260710`.
 - Create the product ID above in App Store Connect.
 - Add pricing and availability for the non-consumable purchase.
 - Test purchase and restore in Sandbox and TestFlight.
