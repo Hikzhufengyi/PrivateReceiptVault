@@ -305,3 +305,13 @@
 
 /* Accessibility */
 "Clear search" = "Clear search";
+"Private Receipt Vault" = "Private Receipt Vault";
+"Keep receipts, bills, and reimbursement records organized without an account." = "Keep receipts, bills, and reimbursement records organized without an account.";
+"Offline by Design" = "Offline by Design";
+"OCR runs on device. Receipts stay in local app storage unless you export or back them up." = "OCR runs on device. Receipts stay in local app storage unless you export or back them up.";
+"Scan, Extract, Review" = "Scan, Extract, Review";
+"Capture receipts, adjust the scan, and review structured fields like tax, tip, card last 4, and line items." = "Capture receipts, adjust the scan, and review structured fields like tax, tip, card last 4, and line items.";
+"Export and Backup" = "Export and Backup";
+"Create professional reports, ZIP packages, and optional password-protected .receiptvaultbackup files." = "Create professional reports, ZIP packages, and optional password-protected .receiptvaultbackup files.";
+"Continue" = "Continue";
+"Get Started" = "Get Started";

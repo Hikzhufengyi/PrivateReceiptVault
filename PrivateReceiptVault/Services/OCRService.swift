@@ -1,6 +1,8 @@
 import Foundation
+#if canImport(UIKit)
 import UIKit
 import Vision
+#endif
 
 struct OCRResult {
     var text: String
@@ -23,7 +25,20 @@ struct OCRResult {
     var lowConfidenceFieldKeys: Set<String>
 }
 
+struct OCRRecognizedLine {
+    let text: String
+    let boundingBox: CGRect?
+    let confidence: Float
+
+    init(text: String, boundingBox: CGRect? = nil, confidence: Float = 1) {
+        self.text = text
+        self.boundingBox = boundingBox
+        self.confidence = confidence
+    }
+}
+
 enum OCRService {
+#if canImport(UIKit)
     static func recognize(image: UIImage) async throws -> OCRResult {
         try await recognize(images: [image])
     }
@@ -33,10 +48,22 @@ enum OCRService {
         var lastError: Error?
 
         for (index, image) in images.enumerated() {
-            do {
-                candidates.append(contentsOf: try recognizeCandidates(image: image, imageIndex: index))
-            } catch {
-                lastError = error
+            for pass in recognitionPasses {
+                do {
+                    let candidate = try recognizeCandidate(
+                        image: image,
+                        imageIndex: index,
+                        languages: pass.languages,
+                        automaticallyDetectsLanguage: pass.automaticallyDetectsLanguage
+                    )
+                    candidates.append(candidate)
+                    if isReliableRecognitionResult(candidate) {
+                        debugPrintSelectedResult(candidate)
+                        return candidate
+                    }
+                } catch {
+                    lastError = error
+                }
             }
         }
 
@@ -52,17 +79,30 @@ enum OCRService {
         return parsedResult(from: [])
     }
 
-    private static func recognizeCandidates(image: UIImage, imageIndex: Int) throws -> [OCRResult] {
+    private static func recognizeCandidate(
+        image: UIImage,
+        imageIndex: Int,
+        languages: [String],
+        automaticallyDetectsLanguage: Bool
+    ) throws -> OCRResult {
         guard let cgImage = image.cgImage else {
             throw NSError(domain: "OCRService", code: 1, userInfo: [NSLocalizedDescriptionKey: "Unable to read image."])
         }
 
         let orientation = CGImagePropertyOrientation(image.imageOrientation)
-        return try recognitionLanguageGroups.map { languages in
-            let lines = try recognizedLines(cgImage: cgImage, orientation: orientation, languages: languages)
-            debugPrintRecognizedLines(imageIndex: imageIndex, imageSize: image.size, languages: languages, lines: lines)
-            return parsedResult(from: lines)
-        }
+        let recognizedLines = try recognizedLines(
+            cgImage: cgImage,
+            orientation: orientation,
+            languages: languages,
+            automaticallyDetectsLanguage: automaticallyDetectsLanguage
+        )
+        debugPrintRecognizedLines(
+            imageIndex: imageIndex,
+            imageSize: image.size,
+            languages: languages,
+            lines: recognizedLines.map(\.text)
+        )
+        return parsedResult(from: recognizedLines)
     }
 
     private static func debugPrintRecognizedLines(imageIndex: Int, imageSize: CGSize, languages: [String], lines: [String]) {
@@ -72,6 +112,7 @@ enum OCRService {
             print("[OCR-DEBUG] image=\(imageIndex) line=\(lineIndex + 1): \(line)")
         }
     }
+#endif
 
     private static func debugPrintSelectedResult(_ result: OCRResult) {
         let merchant = result.merchant.isEmpty ? "<empty>" : result.merchant
@@ -83,9 +124,14 @@ enum OCRService {
     }
 
     static func parseRecognizedLines(_ lines: [String]) -> OCRResult {
+        parsedResult(from: lines.map { OCRRecognizedLine(text: $0) })
+    }
+
+    static func parseRecognizedLines(_ lines: [OCRRecognizedLine]) -> OCRResult {
         parsedResult(from: lines)
     }
 
+#if canImport(UIKit)
     private static let recognitionLanguageGroups: [[String]] = [
         ["zh-Hans", "en-US"],
         ["ja-JP", "en-US"],
@@ -94,26 +140,65 @@ enum OCRService {
         ["de-DE", "es-ES", "fr-FR", "it-IT", "nl-NL", "pt-BR", "en-US"]
     ]
 
-    private static func recognizedLines(cgImage: CGImage, orientation: CGImagePropertyOrientation, languages: [String]) throws -> [String] {
+    private struct RecognitionPass {
+        let languages: [String]
+        let automaticallyDetectsLanguage: Bool
+    }
+
+    private static var recognitionPasses: [RecognitionPass] {
+        let primaryLanguages = preferredRecognitionLanguages()
+        let primary = RecognitionPass(languages: primaryLanguages, automaticallyDetectsLanguage: true)
+        let fallbacks = recognitionLanguageGroups
+            .filter { $0 != primaryLanguages }
+            .map { RecognitionPass(languages: $0, automaticallyDetectsLanguage: false) }
+        return [primary] + fallbacks
+    }
+
+    private static func preferredRecognitionLanguages() -> [String] {
+        let preferred = Locale.preferredLanguages.first?.lowercased() ?? "en"
+        if preferred.hasPrefix("zh") { return ["zh-Hans", "en-US"] }
+        if preferred.hasPrefix("ja") { return ["ja-JP", "en-US"] }
+        if preferred.hasPrefix("ko") { return ["ko-KR", "en-US"] }
+        if preferred.hasPrefix("ar") { return ["ar-SA", "en-US"] }
+        return ["de-DE", "es-ES", "fr-FR", "it-IT", "nl-NL", "pt-BR", "en-US"]
+    }
+
+    private static func recognizedLines(
+        cgImage: CGImage,
+        orientation: CGImagePropertyOrientation,
+        languages: [String],
+        automaticallyDetectsLanguage: Bool
+    ) throws -> [OCRRecognizedLine] {
         let request = VNRecognizeTextRequest()
         request.recognitionLevel = .accurate
         request.usesLanguageCorrection = true
         request.recognitionLanguages = languages
+        request.automaticallyDetectsLanguage = automaticallyDetectsLanguage
 
         let handler = VNImageRequestHandler(cgImage: cgImage, orientation: orientation)
         try handler.perform([request])
 
-        return request.results?
-            .compactMap { $0.topCandidates(1).first?.string.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty } ?? []
+        return request.results?.compactMap { observation in
+            guard let candidate = observation.topCandidates(1).first else { return nil }
+            let text = candidate.string.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !text.isEmpty else { return nil }
+            return OCRRecognizedLine(
+                text: text,
+                boundingBox: observation.boundingBox,
+                confidence: candidate.confidence
+            )
+        } ?? []
     }
+#endif
 
-    private static func parsedResult(from lines: [String]) -> OCRResult {
+    private static func parsedResult(from recognizedLines: [OCRRecognizedLine]) -> OCRResult {
+        let lines = recognizedLines.map(\.text)
         let text = lines.joined(separator: "\n")
-        let subtotalText = stackedSummaryAmount(.subtotal, from: lines) ??
+        let subtotalText = spatialSummaryAmount(.subtotal, from: recognizedLines) ??
+            stackedSummaryAmount(.subtotal, from: lines) ??
             amountForKeywords(Self.subtotalKeywords, from: lines) ?? ""
-        let totalText = guessTotal(from: lines)
-        let taxText = guessTax(from: lines)
+        let totalText = spatialSummaryAmount(.total, from: recognizedLines) ?? guessTotal(from: lines)
+        let taxText = spatialSummaryAmount(.tax, from: recognizedLines) ?? guessTax(from: lines)
         let taxRateText = guessTaxRate(from: lines)
         let tipText = stackedSummaryAmount(.tip, from: lines) ??
             amountForKeywords(Self.tipKeywords, from: lines) ?? ""
@@ -160,7 +245,14 @@ enum OCRService {
             currencyCode: guessCurrencyCode(from: text),
             category: category,
             recognizedFieldKeys: recognizedFieldKeys,
-            lowConfidenceFieldKeys: lowConfidenceKeys(recognizedKeys: recognizedFieldKeys, text: text)
+            lowConfidenceFieldKeys: lowConfidenceKeys(
+                recognizedKeys: recognizedFieldKeys,
+                text: text,
+                subtotalText: subtotalText,
+                totalText: totalText,
+                taxText: taxText,
+                tipText: tipText
+            )
         )
     }
 
@@ -187,7 +279,49 @@ enum OCRService {
         if isSuspiciousChineseMerchant(result.merchant) { score -= 80 }
         score += result.recognizedFieldKeys.count * 8
         score -= result.text.filter { $0 == "#" || $0 == "�" }.count * 2
+        score += financialConsistencyScore(result)
         return score
+    }
+
+    static func isReliableRecognitionResult(_ result: OCRResult) -> Bool {
+        let requiredKeys: Set<String> = ["merchant", "date", "total"]
+        guard requiredKeys.isSubset(of: result.recognizedFieldKeys),
+              requiredKeys.isDisjoint(with: result.lowConfidenceFieldKeys),
+              result.text.count >= 60 else {
+            return false
+        }
+
+        let hasSubtotal = DecimalParser.parse(result.subtotalText) != nil
+        let hasTax = DecimalParser.parse(result.taxText) != nil
+        if hasSubtotal && hasTax {
+            return financialConsistencyScore(result) >= 0
+        }
+        return true
+    }
+
+    private static func financialConsistencyScore(_ result: OCRResult) -> Int {
+        guard let total = DecimalParser.parse(result.totalText), total > Decimal.zero else {
+            return -80
+        }
+        if let tax = DecimalParser.parse(result.taxText), tax < Decimal.zero || tax > total * Decimal(string: "0.30")! {
+            return -100
+        }
+        guard let subtotal = DecimalParser.parse(result.subtotalText),
+              let tax = DecimalParser.parse(result.taxText) else {
+            return 0
+        }
+        let tip = DecimalParser.parse(result.tipText) ?? Decimal.zero
+        let difference = absDecimal(total - subtotal - tax - tip)
+        if difference <= Decimal(string: "0.02")! {
+            return 180
+        }
+        if subtotal == total && containsAnyKeyword(Self.nonSummaryTaxLines, in: result.text) {
+            return 40
+        }
+        if containsAnyKeyword(Self.discountKeywords, in: result.text) {
+            return -20
+        }
+        return -120
     }
 
     private static func guessMerchant(from lines: [String]) -> String {
@@ -270,6 +404,7 @@ enum OCRService {
         case subtotal
         case tax
         case tip
+        case fee
         case discount
     }
 
@@ -289,7 +424,11 @@ enum OCRService {
 
     private static func stackedSummaryAmount(_ field: SummaryField, from lines: [String]) -> String? {
         for block in stackedMoneyLabelBlocks(in: lines).reversed() {
-            let trailingAmounts = summaryTrailingAmountLines(after: block.endIndex, in: lines)
+            let trailingAmounts = summaryTrailingAmountLines(
+                after: block.endIndex,
+                minimumAmountCount: block.labels.count,
+                in: lines
+            )
                 .compactMap(amount(in:))
             guard trailingAmounts.count >= block.labels.count else { continue }
 
@@ -305,18 +444,66 @@ enum OCRService {
         return nil
     }
 
-    private static func summaryTrailingAmountLines(after labelEndIndex: Int, in lines: [String]) -> [String] {
+    private static func summaryTrailingAmountLines(
+        after labelEndIndex: Int,
+        minimumAmountCount: Int,
+        in lines: [String]
+    ) -> [String] {
         var collected: [String] = []
-        for line in lines.dropFirst(labelEndIndex + 1) {
-            if containsAnyKeyword(Self.paymentBoundaryKeywords, in: line) {
+        var amountCount = 0
+        for line in lines.dropFirst(labelEndIndex + 1).prefix(40) {
+            if containsAnyKeyword(Self.paymentBoundaryKeywords, in: line),
+               amountCount >= minimumAmountCount {
                 break
             }
             if isTaxRateOnlyLine(line) || containsAnyKeyword(Self.nonSummaryTaxLines, in: line) {
                 continue
             }
             collected.append(line)
+            if amount(in: line) != nil {
+                amountCount += 1
+            }
         }
         return collected
+    }
+
+    private static func spatialSummaryAmount(
+        _ field: SummaryField,
+        from lines: [OCRRecognizedLine]
+    ) -> String? {
+        let labels = lines.filter { line in
+            line.boundingBox != nil && summaryField(for: line.text) == field
+        }
+
+        for label in labels.reversed() {
+            guard let labelBox = label.boundingBox else { continue }
+            let candidates = lines.compactMap { line -> (value: String, distance: CGFloat, confidence: Float)? in
+                guard let amount = amount(in: line.text),
+                      let amountBox = line.boundingBox,
+                      amountBox.midX > labelBox.midX,
+                      rowsOverlap(labelBox, amountBox) else {
+                    return nil
+                }
+                let horizontalGap = max(0, amountBox.minX - labelBox.maxX)
+                let verticalGap = abs(amountBox.midY - labelBox.midY)
+                return (amount, horizontalGap + verticalGap * 2, line.confidence)
+            }
+            if let best = candidates.min(by: {
+                $0.distance == $1.distance ? $0.confidence > $1.confidence : $0.distance < $1.distance
+            }) {
+                return best.value
+            }
+        }
+        return nil
+    }
+
+    private static func rowsOverlap(_ lhs: CGRect, _ rhs: CGRect) -> Bool {
+        let overlap = max(0, min(lhs.maxY, rhs.maxY) - max(lhs.minY, rhs.minY))
+        let minimumHeight = min(lhs.height, rhs.height)
+        if minimumHeight > 0, overlap / minimumHeight >= 0.35 {
+            return true
+        }
+        return abs(lhs.midY - rhs.midY) <= max(lhs.height, rhs.height) * 0.65
     }
 
     private static func summaryAmountWindow(for labels: [SummaryField], in amounts: [String]) -> [String] {
@@ -354,7 +541,7 @@ enum OCRService {
         for (index, label) in labels.enumerated() where index != totalIndex {
             guard let amount = DecimalParser.parse(amounts[index]) else { continue }
             switch label {
-            case .subtotal, .tax, .tip:
+            case .subtotal, .tax, .tip, .fee:
                 expectedTotal += amount
                 hasComponent = true
             case .discount:
@@ -377,7 +564,11 @@ enum OCRService {
     private static func bestStackedSummaryBalanceScore(in lines: [String]) -> Int {
         stackedMoneyLabelBlocks(in: lines)
             .compactMap { block -> Int? in
-                let trailingAmounts = summaryTrailingAmountLines(after: block.endIndex, in: lines)
+                let trailingAmounts = summaryTrailingAmountLines(
+                    after: block.endIndex,
+                    minimumAmountCount: block.labels.count,
+                    in: lines
+                )
                     .compactMap(amount(in:))
                 guard trailingAmounts.count >= block.labels.count else { return nil }
                 let maxScore = summaryAmountWindows(for: block.labels, in: trailingAmounts)
@@ -443,6 +634,9 @@ enum OCRService {
         }
         if containsAnyKeyword(Self.tipKeywords, in: line) {
             return .tip
+        }
+        if containsAnyKeyword(Self.feeKeywords, in: line) {
+            return .fee
         }
         if containsAnyKeyword(Self.discountKeywords, in: line) {
             return .discount
@@ -670,6 +864,11 @@ enum OCRService {
         "taxable amount", "taxable sales", "taxable subtotal", "外税対象", "外税 象", "内税対象", "課税対象", "课税对象"
     ]
     private static let tipKeywords = tokens(for: .tip)
+    private static let feeKeywords = [
+        "shipping", "shipping & handling", "shipping and handling", "delivery fee", "postage", "freight",
+        "versand", "lieferung", "livraison", "expedition", "expédition", "envio", "envío", "spedizione",
+        "送料", "配送料", "配送費", "运费", "運費", "配送费", "배송비"
+    ]
     private static let discountKeywords = tokens(for: .discount)
     private static let paymentBoundaryKeywords = tokens(for: .payment)
 
@@ -686,8 +885,11 @@ enum OCRService {
               line.range(of: #"(?i)\b(vat|tax|gst|iva|tva)\b"#, options: .regularExpression) != nil else {
             return false
         }
+        guard line.contains("%") || line.contains("％") else {
+            return false
+        }
         let withoutPercentRate = line.replacingOccurrences(
-            of: #"\d{1,2}(?:[.,:]\d{1,4})?\s*(?:%|％|9|90|86|96|009|0086|0090|0096)"#,
+            of: #"\d{1,2}(?:[.,:]\d{1,4})?\s*(?:%|％)"#,
             with: "",
             options: [.regularExpression, .caseInsensitive]
         )
@@ -758,30 +960,31 @@ enum OCRService {
     }
 
     private static func amount(in line: String) -> String? {
-        let hasCurrencySymbol = line.containsCurrencySymbol
+        let normalizedLine = normalizedOCRNumericText(line)
+        let hasCurrencySymbol = normalizedLine.containsCurrencySymbol
         let pattern = #"(?<!\d)(?:[$€£¥￥₩]\s*)?([-−]?)(\d{1,6}(?:[,.]\s*\d{3})*(?:[,.]\d{1,2})?|\d+(?:[,.]\d{1,2})?)([-−]?)(?!\d)"#
         guard let regex = try? NSRegularExpression(pattern: pattern),
-              let match = regex.matches(in: line, range: NSRange(line.startIndex..., in: line)).last,
-              let matchRange = Range(match.range(at: 0), in: line),
-              let leadingSignRange = Range(match.range(at: 1), in: line),
-              let amountRange = Range(match.range(at: 2), in: line),
-              let trailingSignRange = Range(match.range(at: 3), in: line) else { return nil }
-        let matchedText = String(line[matchRange])
-        if line[matchRange.upperBound...].trimmingCharacters(in: .whitespaces).hasPrefix("%") {
+              let match = regex.matches(in: normalizedLine, range: NSRange(normalizedLine.startIndex..., in: normalizedLine)).last,
+              let matchRange = Range(match.range(at: 0), in: normalizedLine),
+              let leadingSignRange = Range(match.range(at: 1), in: normalizedLine),
+              let amountRange = Range(match.range(at: 2), in: normalizedLine),
+              let trailingSignRange = Range(match.range(at: 3), in: normalizedLine) else { return nil }
+        let matchedText = String(normalizedLine[matchRange])
+        if normalizedLine[matchRange.upperBound...].trimmingCharacters(in: .whitespaces).hasPrefix("%") {
             return nil
         }
-        let leadingSign = String(line[leadingSignRange])
-        let trailingSign = String(line[trailingSignRange])
+        let leadingSign = String(normalizedLine[leadingSignRange])
+        let trailingSign = String(normalizedLine[trailingSignRange])
         let sign = (leadingSign == "-" || leadingSign == "−" || trailingSign == "-" || trailingSign == "−") ? "-" : ""
         let value = sign + normalizedAmountText(
-            String(line[amountRange]),
+            String(normalizedLine[amountRange]),
             hasCurrencySymbol: hasCurrencySymbol || matchedText.containsCurrencySymbol,
-            usesMinorUnits: currencyAmountUsesMinorUnits(in: matchedText, line: line)
+            usesMinorUnits: currencyAmountUsesMinorUnits(in: matchedText, line: normalizedLine)
         )
-        guard value.contains(".") || hasCurrencySymbol || matchedText.containsCurrencySymbol || line.localizedCaseInsensitiveContains("合计") || line.localizedCaseInsensitiveContains("实付款") else {
+        guard value.contains(".") || hasCurrencySymbol || matchedText.containsCurrencySymbol || normalizedLine.localizedCaseInsensitiveContains("合计") || normalizedLine.localizedCaseInsensitiveContains("实付款") else {
             return nil
         }
-        return correctedLeadingCurrencyOCR(in: value, from: line)
+        return correctedLeadingCurrencyOCR(in: value, from: normalizedLine)
     }
 
     private static func normalizedAmountText(_ text: String, hasCurrencySymbol: Bool = false, usesMinorUnits: Bool = true) -> String {
@@ -806,23 +1009,35 @@ enum OCRService {
             }
         }
         let withoutCommas = cleaned.replacingOccurrences(of: ",", with: "")
-        if hasCurrencySymbol,
-           usesMinorUnits,
-           !withoutCommas.contains("."),
-           withoutCommas.allSatisfy(\.isNumber),
-           withoutCommas.count >= 3 {
-            let centsIndex = withoutCommas.index(withoutCommas.endIndex, offsetBy: -2)
-            return "\(withoutCommas[..<centsIndex]).\(withoutCommas[centsIndex...])"
-        }
         return withoutCommas
     }
 
     private static func currencyAmountUsesMinorUnits(in matchedText: String, line: String) -> Bool {
-        !containsZeroDecimalCurrencySymbol(matchedText) && !containsZeroDecimalCurrencySymbol(line)
+        if containsZeroDecimalCurrencySymbol(matchedText) || containsZeroDecimalCurrencySymbol(line) {
+            return matchedText.range(of: #"[.,]\d{1,2}$"#, options: .regularExpression) != nil ||
+                line.range(of: #"[.,]\d{1,2}(?:\s|$)"#, options: .regularExpression) != nil
+        }
+        return true
     }
 
     private static func containsZeroDecimalCurrencySymbol(_ text: String) -> Bool {
         text.contains("¥") || text.contains("￥") || text.contains("₩") || text.contains("₫")
+    }
+
+    private static func normalizedOCRNumericText(_ text: String) -> String {
+        var normalized = text
+        let replacements = [
+            ("٠", "0"), ("١", "1"), ("٢", "2"), ("٣", "3"), ("٤", "4"),
+            ("٥", "5"), ("٦", "6"), ("٧", "7"), ("٨", "8"), ("٩", "9"),
+            ("۰", "0"), ("۱", "1"), ("۲", "2"), ("۳", "3"), ("۴", "4"),
+            ("۵", "5"), ("۶", "6"), ("۷", "7"), ("۸", "8"), ("۹", "9"),
+            ("٫", "."), ("٬", ","), ("٪", "%"),
+            ("\u{00A0}", ""), ("\u{202F}", ""), ("\u{2009}", "")
+        ]
+        for (source, replacement) in replacements {
+            normalized = normalized.replacingOccurrences(of: source, with: replacement)
+        }
+        return normalized
     }
 
     private static func correctedLeadingCurrencyOCR(in value: String, from line: String) -> String {
@@ -948,13 +1163,17 @@ enum OCRService {
             let candidate = Array(lineWords[startIndex..<(startIndex + keywordWords.count)])
             let matches = zip(candidate, keywordWords).allSatisfy { word, expected in
                 let allowedDistance = max(1, expected.count / 4)
-                return word == expected || editDistance(word, expected) <= allowedDistance
+                return word == expected ||
+                    (fuzzyMatchCompatible(word, expected) && editDistance(word, expected) <= allowedDistance)
             }
             if matches {
                 return true
             }
         }
 
+        guard containsCJK(in: line) || containsCJK(in: keyword) else {
+            return false
+        }
         let compactLine = lineWords.joined()
         let compactKeyword = keywordWords.joined()
         return compactLine.contains(compactKeyword) ||
@@ -969,23 +1188,35 @@ enum OCRService {
         }
     }
 
-    private static func canonicalWords(in text: String) -> [String] {
-        let normalized = text.lowercased().map { character -> Character in
-            switch character {
-            case "0": "o"
-            case "1", "!", "|", "ı": "l"
-            case "5": "s"
-            case "8": "b"
-            default: character
-            }
+    private static func containsArabic(in text: String) -> Bool {
+        text.unicodeScalars.contains { scalar in
+            (0x0600...0x06FF).contains(Int(scalar.value)) ||
+                (0x0750...0x077F).contains(Int(scalar.value))
         }
-        let canonical = String(normalized)
+    }
+
+    private static func fuzzyMatchCompatible(_ lhs: String, _ rhs: String) -> Bool {
+        containsCJK(in: lhs) == containsCJK(in: rhs) &&
+            containsArabic(in: lhs) == containsArabic(in: rhs)
+    }
+
+    private static func canonicalWords(in text: String) -> [String] {
+        let canonical = text.lowercased()
             .replacingOccurrences(of: "−", with: "-")
             .replacingOccurrences(of: "—", with: "-")
-        return canonical
-            .split { !$0.isLetter }
-            .map(String.init)
-            .filter { !$0.isEmpty }
+        return canonical.split { !$0.isLetter && !$0.isNumber }.compactMap { token in
+            let value = String(token)
+            guard value.contains(where: { $0.isLetter }) else { return nil }
+            return String(value.map { character -> Character in
+                switch character {
+                case "0": "o"
+                case "1", "!", "|", "ı": "l"
+                case "5": "s"
+                case "8": "b"
+                default: character
+                }
+            })
+        }
     }
 
     private static func editDistance(_ lhs: String, _ rhs: String) -> Int {
@@ -1182,13 +1413,39 @@ enum OCRService {
         return keys
     }
 
-    private static func lowConfidenceKeys(recognizedKeys: Set<String>, text: String) -> Set<String> {
+    private static func lowConfidenceKeys(
+        recognizedKeys: Set<String>,
+        text: String,
+        subtotalText: String,
+        totalText: String,
+        taxText: String,
+        tipText: String
+    ) -> Set<String> {
         var keys: Set<String> = []
         if !recognizedKeys.contains("total") { keys.insert("total") }
         if !recognizedKeys.contains("date") { keys.insert("date") }
         if !recognizedKeys.contains("merchant") { keys.insert("merchant") }
         if text.count < 40 {
             keys.formUnion(["merchant", "date", "total", "tax"])
+        }
+        guard let total = DecimalParser.parse(totalText), total > Decimal.zero else {
+            keys.insert("total")
+            return keys
+        }
+        if DecimalParser.parse(subtotalText) == nil && !subtotalText.isEmpty { keys.insert("subtotal") }
+        if DecimalParser.parse(taxText) == nil && !taxText.isEmpty { keys.insert("tax") }
+        if let tax = DecimalParser.parse(taxText), tax < Decimal.zero || tax > total * Decimal(string: "0.30")! {
+            keys.insert("tax")
+        }
+        if let subtotal = DecimalParser.parse(subtotalText),
+           let tax = DecimalParser.parse(taxText) {
+            let tip = DecimalParser.parse(tipText) ?? Decimal.zero
+            let difference = absDecimal(total - subtotal - tax - tip)
+            let discountOrIncludedTax = containsAnyKeyword(Self.discountKeywords, in: text) ||
+                containsAnyKeyword(Self.nonSummaryTaxLines, in: text)
+            if difference > Decimal(string: "0.02")!, !discountOrIncludedTax {
+                keys.formUnion(["subtotal", "tax", "total"])
+            }
         }
         return keys
     }
@@ -1200,11 +1457,12 @@ enum OCRService {
               let range = Range(match.range(at: 1), in: text) else { return nil }
         return String(text[range])
     }
+
 }
 
 private extension String {
     var containsAmount: Bool {
-        containsCurrencySymbol || range(of: #"\d+[.]\d{1,2}"#, options: .regularExpression) != nil
+        containsCurrencySymbol || range(of: #"[0-9٠-٩]+[.,٫][0-9٠-٩]{1,2}"#, options: .regularExpression) != nil
     }
 
     var containsCurrencySymbol: Bool {
@@ -1217,6 +1475,7 @@ private extension String {
     }
 }
 
+#if canImport(UIKit)
 private extension CGImagePropertyOrientation {
     init(_ orientation: UIImage.Orientation) {
         switch orientation {
@@ -1232,3 +1491,4 @@ private extension CGImagePropertyOrientation {
         }
     }
 }
+#endif

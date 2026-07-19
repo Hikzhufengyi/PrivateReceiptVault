@@ -685,11 +685,8 @@ struct ReceiptDraft {
             return
         }
 
-        if let subtotal, let tax,
-           amountsMatch(subtotal, tax),
-           subtotal < total * Decimal(string: "0.50")! {
-            subtotalText = Self.currencyText(total)
-            lowConfidenceFieldKeys.insert("subtotal")
+        if subtotal != nil, tax != nil {
+            lowConfidenceFieldKeys.formUnion(["subtotal", "tax", "total"])
             return
         }
 
@@ -704,6 +701,7 @@ struct ReceiptDraft {
 
         if let tax {
             if let subtotal, subtotal > total {
+                lowConfidenceFieldKeys.formUnion(["subtotal", "tax", "total"])
                 return
             }
             let inferredSubtotal = total - tax - tipAmount
@@ -730,9 +728,33 @@ struct ReceiptDraft {
 
 enum DecimalParser {
     static func parse(_ text: String) -> Decimal? {
-        let cleaned = text
-            .replacingOccurrences(of: ",", with: "")
-            .trimmingCharacters(in: .whitespacesAndNewlines)
+        var cleaned = text
+        let replacements = [
+            ("٠", "0"), ("١", "1"), ("٢", "2"), ("٣", "3"), ("٤", "4"),
+            ("٥", "5"), ("٦", "6"), ("٧", "7"), ("٨", "8"), ("٩", "9"),
+            ("۰", "0"), ("۱", "1"), ("۲", "2"), ("۳", "3"), ("۴", "4"),
+            ("۵", "5"), ("۶", "6"), ("۷", "7"), ("۸", "8"), ("۹", "9"),
+            ("٫", "."), ("٬", ","), ("\u{00A0}", ""), ("\u{202F}", ""), ("\u{2009}", "")
+        ]
+        for (source, replacement) in replacements {
+            cleaned = cleaned.replacingOccurrences(of: source, with: replacement)
+        }
+        cleaned = cleaned.trimmingCharacters(in: .whitespacesAndNewlines)
+        let commaIndex = cleaned.lastIndex(of: ",")
+        let dotIndex = cleaned.lastIndex(of: ".")
+        if let commaIndex, let dotIndex {
+            let decimalSeparator = commaIndex > dotIndex ? "," : "."
+            let groupingSeparator = decimalSeparator == "," ? "." : ","
+            cleaned = cleaned.replacingOccurrences(of: groupingSeparator, with: "")
+            if decimalSeparator == "," {
+                cleaned = cleaned.replacingOccurrences(of: ",", with: ".")
+            }
+        } else if let commaIndex {
+            let fractionalCount = cleaned.distance(from: cleaned.index(after: commaIndex), to: cleaned.endIndex)
+            cleaned = fractionalCount == 1 || fractionalCount == 2
+                ? cleaned.replacingOccurrences(of: ",", with: ".")
+                : cleaned.replacingOccurrences(of: ",", with: "")
+        }
         guard !cleaned.isEmpty else { return nil }
         return Decimal(string: cleaned, locale: Locale(identifier: "en_US_POSIX"))
     }

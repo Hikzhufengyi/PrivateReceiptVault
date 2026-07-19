@@ -304,3 +304,13 @@
 
 /* Accessibility */
 "Clear search" = "清除搜索";
+"Private Receipt Vault" = "私密收据保险箱";
+"Keep receipts, bills, and reimbursement records organized without an account." = "无需账号，也能整理收据、账单和报销记录。";
+"Offline by Design" = "为离线而设计";
+"OCR runs on device. Receipts stay in local app storage unless you export or back them up." = "OCR 在设备上运行。除非你主动导出或备份，否则收据保存在 App 本地。";
+"Scan, Extract, Review" = "扫描、提取、复核";
+"Capture receipts, adjust the scan, and review structured fields like tax, tip, card last 4, and line items." = "拍摄收据、调整扫描结果，并复核税费、小费、卡号后四位和商品明细等字段。";
+"Export and Backup" = "导出与备份";
+"Create professional reports, ZIP packages, and optional password-protected .receiptvaultbackup files." = "生成专业报告、ZIP 文件包和可选密码保护的 .receiptvaultbackup 备份。";
+"Continue" = "继续";
+"Get Started" = "开始使用";

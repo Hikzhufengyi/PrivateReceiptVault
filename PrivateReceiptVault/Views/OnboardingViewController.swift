@@ -51,7 +51,7 @@ struct OnboardingViewController: View {
                         }
                     }
                 } label: {
-                    Text(page == pages.count - 1 ? "Get Started" : "Continue")
+                    Text(page == pages.count - 1 ? LocalizedStringKey("Get Started") : LocalizedStringKey("Continue"))
                         .font(.headline)
                         .frame(maxWidth: .infinity)
                 }

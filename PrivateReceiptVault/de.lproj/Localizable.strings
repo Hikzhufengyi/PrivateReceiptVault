@@ -305,3 +305,13 @@
 
 /* Accessibility */
 "Clear search" = "Suche löschen";
+"Private Receipt Vault" = "Privater Beleg-Safe";
+"Keep receipts, bills, and reimbursement records organized without an account." = "Belege, Rechnungen und Erstattungsnachweise ohne Konto organisieren.";
+"Offline by Design" = "Für Offline-Nutzung entwickelt";
+"OCR runs on device. Receipts stay in local app storage unless you export or back them up." = "Die OCR läuft auf dem Gerät. Belege bleiben lokal, sofern du sie nicht exportierst oder sicherst.";
+"Scan, Extract, Review" = "Scannen, erfassen, prüfen";
+"Capture receipts, adjust the scan, and review structured fields like tax, tip, card last 4, and line items." = "Belege erfassen, den Scan anpassen und Felder wie Steuer, Trinkgeld, Kartenende und Positionen prüfen.";
+"Export and Backup" = "Export und Backup";
+"Create professional reports, ZIP packages, and optional password-protected .receiptvaultbackup files." = "Erstelle Berichte, ZIP-Pakete und optional passwortgeschützte .receiptvaultbackup-Dateien.";
+"Continue" = "Weiter";
+"Get Started" = "Loslegen";

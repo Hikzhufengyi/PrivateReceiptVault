@@ -305,3 +305,13 @@
 
 /* Accessibility */
 "Clear search" = "Effacer la recherche";
+"Private Receipt Vault" = "Coffre privé de reçus";
+"Keep receipts, bills, and reimbursement records organized without an account." = "Organisez reçus, factures et remboursements sans créer de compte.";
+"Offline by Design" = "Conçu pour fonctionner hors ligne";
+"OCR runs on device. Receipts stay in local app storage unless you export or back them up." = "L'OCR fonctionne sur l'appareil. Les reçus restent locaux sauf si vous les exportez ou les sauvegardez.";
+"Scan, Extract, Review" = "Scanner, extraire, vérifier";
+"Capture receipts, adjust the scan, and review structured fields like tax, tip, card last 4, and line items." = "Capturez les reçus, ajustez le scan et vérifiez taxe, pourboire, carte et lignes.";
+"Export and Backup" = "Export et sauvegarde";
+"Create professional reports, ZIP packages, and optional password-protected .receiptvaultbackup files." = "Créez des rapports, des ZIP et, au besoin, des sauvegardes .receiptvaultbackup protégées par mot de passe.";
+"Continue" = "Continuer";
+"Get Started" = "Commencer";
