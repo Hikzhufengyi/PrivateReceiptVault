@@ -183,11 +183,12 @@ struct AddReviewViewController: View {
                     }
 
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("收据币种")
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(.secondary)
+                        fieldLabel("收据币种", key: "currency")
                         CurrencyPicker(currencyCode: $draft.currencyCode)
                             .frame(maxWidth: .infinity, alignment: .leading)
+                            .onChange(of: draft.currencyCode) { _ in
+                                confirmedLowConfidenceFieldKeys.remove("currency")
+                            }
                     }
                 }
 
@@ -223,6 +224,7 @@ struct AddReviewViewController: View {
             ReviewField(key: "merchant", title: "商户", value: draft.merchant, systemImage: "storefront", status: status(for: "merchant", value: draft.merchant)),
             ReviewField(key: "category", title: "分类", value: draft.category.localizedName, systemImage: draft.category.systemImage, status: status(for: "category", value: draft.category == .other ? "" : draft.category.localizedName)),
             ReviewField(key: "date", title: "日期", value: draft.date.formatted(date: .abbreviated, time: .omitted), systemImage: "calendar", status: status(for: "date", value: draft.date.formatted(date: .abbreviated, time: .omitted))),
+            ReviewField(key: "currency", title: "收据币种", value: draft.currencyCode, systemImage: "banknote", status: status(for: "currency", value: draft.currencyCode)),
             ReviewField(key: "total", title: "总额", value: currencyValue(draft.totalText), systemImage: "sum", status: status(for: "total", value: draft.totalText)),
             ReviewField(key: "tax", title: "税额", value: currencyValue(draft.taxText), systemImage: "percent", status: status(for: "tax", value: draft.taxText)),
             ReviewField(key: "subtotal", title: "小计（税前）", value: currencyValue(draft.subtotalText), systemImage: "list.bullet.rectangle", status: status(for: "subtotal", value: draft.subtotalText)),
@@ -320,6 +322,7 @@ struct AddReviewViewController: View {
     private func value(for key: String) -> String {
         switch key {
         case "merchant": draft.merchant
+        case "currency": draft.currencyCode
         case "total": draft.totalText
         case "tax": draft.taxText
         case "subtotal": draft.subtotalText

@@ -102,6 +102,33 @@ enum OCRParserRegressionTests {
             print("FAIL reliable Amazon result did not use fast path")
         }
 
+        let japaneseCurrencyMismatch = OCRService.parseRecognizedLines([
+            "あおきスーパー",
+            "合計 ¥600",
+            "Ft"
+        ])
+        let japaneseReviewKeys: Set<String> = ["merchant", "currency", "total"]
+        if japaneseCurrencyMismatch.currencyCode == "HUF",
+           japaneseReviewKeys.isSubset(of: japaneseCurrencyMismatch.lowConfidenceFieldKeys),
+           !OCRService.isReliableRecognitionResult(japaneseCurrencyMismatch) {
+            print("PASS Japanese currency mismatch requires review")
+        } else {
+            failures += 1
+            print("FAIL Japanese currency mismatch: currency=\(japaneseCurrencyMismatch.currencyCode ?? "nil") review=\(japaneseCurrencyMismatch.lowConfidenceFieldKeys)")
+        }
+
+        let garbledMerchant = OCRService.parseRecognizedLines([
+            "*FTTHETE",
+            "TOTAL 600",
+            "Ft"
+        ])
+        if japaneseReviewKeys.isSubset(of: garbledMerchant.lowConfidenceFieldKeys) {
+            print("PASS garbled merchant requires currency and total review")
+        } else {
+            failures += 1
+            print("FAIL garbled merchant review: review=\(garbledMerchant.lowConfidenceFieldKeys)")
+        }
+
         let inconsistent = OCRService.parseRecognizedLines([
             "STORE",
             "SUBTOTAL $10.00",
@@ -114,6 +141,61 @@ enum OCRParserRegressionTests {
         } else {
             failures += 1
             print("FAIL inconsistent summary review keys: \(inconsistent.lowConfidenceFieldKeys)")
+        }
+
+        let kfcPaymentReceipt = OCRService.parseRecognizedLines([
+            "Family Fill Up", "20.00", "Tax", "DRIVE THRU", "ETender Credit", "Change",
+            "1.73", "$21.73", "$21.73", "$0.00", "CHARGE DETAIL: SALE"
+        ])
+        if kfcPaymentReceipt.totalText == "21.73" {
+            print("PASS payment receipt derives total from tender and zero change")
+        } else {
+            failures += 1
+            print("FAIL payment receipt total: \(kfcPaymentReceipt.totalText)")
+        }
+
+        let roundedCashReceipt = OCRService.parseRecognizedLines([
+            "TOTAL AMT.", "ROUNDING ADJ.", "ROUND", "CASH", "CHANGE",
+            "60.31", "-0.01", "60.30", "70.30", "10.00"
+        ])
+        if roundedCashReceipt.totalText == "60.30" {
+            print("PASS rounded cash receipt uses tender minus change")
+        } else {
+            failures += 1
+            print("FAIL rounded cash receipt total: \(roundedCashReceipt.totalText)")
+        }
+
+        let positionedRoundedCashReceipt = OCRService.parseRecognizedLines([
+            OCRRecognizedLine(text: "TOTAL AMT.", boundingBox: CGRect(x: 0.10, y: 0.50, width: 0.30, height: 0.03)),
+            OCRRecognizedLine(text: "60.31", boundingBox: CGRect(x: 0.80, y: 0.50, width: 0.12, height: 0.03)),
+            OCRRecognizedLine(text: "CHANGE", boundingBox: CGRect(x: 0.10, y: 0.30, width: 0.20, height: 0.03)),
+            OCRRecognizedLine(text: "60.30", boundingBox: CGRect(x: 0.80, y: 0.34, width: 0.12, height: 0.03)),
+            OCRRecognizedLine(text: "70.30", boundingBox: CGRect(x: 0.80, y: 0.32, width: 0.12, height: 0.03)),
+            OCRRecognizedLine(text: "10.00", boundingBox: CGRect(x: 0.80, y: 0.30, width: 0.12, height: 0.03))
+        ])
+        if positionedRoundedCashReceipt.totalText == "60.30" {
+            print("PASS positioned rounded cash receipt uses tender minus change")
+        } else {
+            failures += 1
+            print("FAIL positioned rounded cash receipt total: \(positionedRoundedCashReceipt.totalText)")
+        }
+
+        let shopifyOrder = OCRService.parseRecognizedLines([
+            "Subtotal", "Order discount", "Shipping", "Taxes", "Total", "Total paid today",
+            "$10.48", "-$5.00", "$10.00 Free", "$0.00", "$5.48 USD", "$0.00 USD"
+        ])
+        if shopifyOrder.totalText == "5.48" {
+            print("PASS order total is not replaced by total paid today")
+        } else {
+            failures += 1
+            print("FAIL Shopify order total: \(shopifyOrder.totalText)")
+        }
+
+        if CurrencyOption.code(for: "Walmart ENTRY TOTAL $144.02") == "USD" {
+            print("PASS currency tokens do not match ordinary words")
+        } else {
+            failures += 1
+            print("FAIL currency token boundary")
         }
 
         let decimalCases: [(String, String)] = [

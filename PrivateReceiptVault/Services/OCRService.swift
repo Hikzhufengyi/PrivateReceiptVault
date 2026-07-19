@@ -194,10 +194,13 @@ enum OCRService {
     private static func parsedResult(from recognizedLines: [OCRRecognizedLine]) -> OCRResult {
         let lines = recognizedLines.map(\.text)
         let text = lines.joined(separator: "\n")
+        let currencyCode = guessCurrencyCode(from: text)
         let subtotalText = spatialSummaryAmount(.subtotal, from: recognizedLines) ??
             stackedSummaryAmount(.subtotal, from: lines) ??
             amountForKeywords(Self.subtotalKeywords, from: lines) ?? ""
-        let totalText = spatialSummaryAmount(.total, from: recognizedLines) ?? guessTotal(from: lines)
+        let totalText = paymentAmountBeforeZeroChangeTotal(from: lines) ??
+            spatialSummaryAmount(.total, from: recognizedLines) ??
+            guessTotal(from: lines)
         let taxText = spatialSummaryAmount(.tax, from: recognizedLines) ?? guessTax(from: lines)
         let taxRateText = guessTaxRate(from: lines)
         let tipText = stackedSummaryAmount(.tip, from: lines) ??
@@ -214,6 +217,7 @@ enum OCRService {
         let recognizedFieldKeys = recognizedKeys(
             merchant: merchant,
             category: category,
+            currencyCode: currencyCode,
             date: date,
             subtotalText: subtotalText,
             totalText: totalText,
@@ -242,12 +246,14 @@ enum OCRService {
             storeAddress: storeAddress,
             receiptNumber: receiptNumber,
             lineItems: lineItems,
-            currencyCode: guessCurrencyCode(from: text),
+            currencyCode: currencyCode,
             category: category,
             recognizedFieldKeys: recognizedFieldKeys,
             lowConfidenceFieldKeys: lowConfidenceKeys(
                 recognizedKeys: recognizedFieldKeys,
                 text: text,
+                merchant: merchant,
+                currencyCode: currencyCode,
                 subtotalText: subtotalText,
                 totalText: totalText,
                 taxText: taxText,
@@ -339,6 +345,7 @@ enum OCRService {
     private static func guessTotal(from lines: [String]) -> String {
         positiveReceiptTotal(
             chineseCommercePaidAmount(from: lines) ??
+            paymentAmountBeforeZeroChangeTotal(from: lines) ??
             zeroDecimalTenderChangeTotal(from: lines) ??
             stackedSummaryAmount(.total, from: lines) ??
             amountForKeywords(Self.totalKeywords, from: lines, excluding: Self.nonTotalKeywords) ??
@@ -472,7 +479,8 @@ enum OCRService {
         from lines: [OCRRecognizedLine]
     ) -> String? {
         let labels = lines.filter { line in
-            line.boundingBox != nil && summaryField(for: line.text) == field
+            line.boundingBox != nil && summaryField(for: line.text) == field &&
+                !(field == .total && isDeferredPaymentTotalLabel(line.text))
         }
 
         for label in labels.reversed() {
@@ -645,6 +653,9 @@ enum OCRService {
             return .subtotal
         }
         if containsAnyKeyword(Self.totalKeywords, in: line) {
+            if isDeferredPaymentTotalLabel(line) {
+                return nil
+            }
             return .total
         }
         return nil
@@ -763,6 +774,28 @@ enum OCRService {
             }
         }
         return nil
+    }
+
+    private static func paymentAmountBeforeZeroChangeTotal(from lines: [String]) -> String? {
+        guard let changeIndex = lines.lastIndex(where: { canonicalWords(in: $0).contains("change") }) else {
+            return nil
+        }
+
+        let amounts = lines.dropFirst(changeIndex).compactMap { line -> (text: String, value: Decimal)? in
+            guard let text = amount(in: line), let value = DecimalParser.parse(text) else { return nil }
+            return (text, value)
+        }
+        guard amounts.count >= 3 else { return nil }
+
+        let displayedTotal = amounts[amounts.count - 3]
+        let paid = amounts[amounts.count - 2]
+        let change = amounts[amounts.count - 1]
+        guard displayedTotal.value > Decimal.zero,
+              paid.value >= change.value,
+              amountsMatch(paid.value - change.value, displayedTotal.value) else {
+            return nil
+        }
+        return displayedTotal.text
     }
 
     private static func zeroDecimalTaxAmountNearRate(from lines: [String]) -> String? {
@@ -897,8 +930,12 @@ enum OCRService {
     }
 
     private static let nonTotalKeywords = subtotalKeywords + taxKeywords + tipKeywords + discountKeywords + paymentBoundaryKeywords + [
-        "change"
+        "change", "total paid today"
     ]
+
+    private static func isDeferredPaymentTotalLabel(_ line: String) -> Bool {
+        lineMatchesKeyword(line, "total paid today")
+    }
 
     private static let moneyBoundaryKeywords = subtotalKeywords + taxKeywords + tipKeywords + discountKeywords + paymentBoundaryKeywords + totalKeywords + [
         "amount", "change"
@@ -1382,6 +1419,7 @@ enum OCRService {
     private static func recognizedKeys(
         merchant: String,
         category: ReceiptCategory?,
+        currencyCode: String?,
         date: Date?,
         subtotalText: String,
         totalText: String,
@@ -1398,6 +1436,7 @@ enum OCRService {
         var keys: Set<String> = []
         if !merchant.isEmpty { keys.insert("merchant") }
         if category != nil { keys.insert("category") }
+        if currencyCode?.isEmpty == false { keys.insert("currency") }
         if date != nil { keys.insert("date") }
         if !subtotalText.isEmpty { keys.insert("subtotal") }
         if !totalText.isEmpty { keys.insert("total") }
@@ -1416,6 +1455,8 @@ enum OCRService {
     private static func lowConfidenceKeys(
         recognizedKeys: Set<String>,
         text: String,
+        merchant: String,
+        currencyCode: String?,
         subtotalText: String,
         totalText: String,
         taxText: String,
@@ -1427,6 +1468,12 @@ enum OCRService {
         if !recognizedKeys.contains("merchant") { keys.insert("merchant") }
         if text.count < 40 {
             keys.formUnion(["merchant", "date", "total", "tax"])
+        }
+        if containsJapaneseScript(text), currencyCode != "JPY" {
+            keys.formUnion(["merchant", "currency", "total"])
+        }
+        if looksLikeOCRGarbage(merchant) {
+            keys.formUnion(["merchant", "currency", "total"])
         }
         guard let total = DecimalParser.parse(totalText), total > Decimal.zero else {
             keys.insert("total")
@@ -1448,6 +1495,22 @@ enum OCRService {
             }
         }
         return keys
+    }
+
+    private static func containsJapaneseScript(_ text: String) -> Bool {
+        text.unicodeScalars.contains { scalar in
+            (0x3040...0x30FF).contains(scalar.value) || (0xFF66...0xFF9D).contains(scalar.value)
+        }
+    }
+
+    private static func looksLikeOCRGarbage(_ merchant: String) -> Bool {
+        let trimmed = merchant.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return false }
+        if trimmed.first?.isLetter == false, trimmed.first?.isNumber == false {
+            return true
+        }
+        let letters = trimmed.filter(\.isLetter).count
+        return letters < 2 && trimmed.count >= 3
     }
 
     private static func firstMatch(pattern: String, in text: String, options: NSRegularExpression.Options = []) -> String? {

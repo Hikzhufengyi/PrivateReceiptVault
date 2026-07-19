@@ -487,10 +487,10 @@ struct CurrencyOption: Identifiable, Equatable {
                     return $0.code < $1.code
                 }
                 return $0.token.count > $1.token.count
-            }
+        }
 
         for pair in tokenPairs {
-            if normalizedText.contains(pair.token) {
+            if containsOCRToken(pair.token, in: normalizedText) {
                 return pair.code
             }
         }
@@ -500,6 +500,17 @@ struct CurrencyOption: Identifiable, Equatable {
             return lowercasedText.contains("jpy") || lowercasedText.contains("japan") || lowercasedText.contains("yen") ? "JPY" : "CNY"
         }
         return nil
+    }
+
+    private static func containsOCRToken(_ token: String, in normalizedText: String) -> Bool {
+        guard token.allSatisfy({ $0.isLetter || $0.isNumber }) else {
+            return normalizedText.contains(token)
+        }
+        let escaped = NSRegularExpression.escapedPattern(for: token)
+        return normalizedText.range(
+            of: "(?<![A-Z0-9])\(escaped)(?![A-Z0-9])",
+            options: .regularExpression
+        ) != nil
     }
 }
 
