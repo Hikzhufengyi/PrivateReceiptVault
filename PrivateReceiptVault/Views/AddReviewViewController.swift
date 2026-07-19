@@ -2,6 +2,7 @@ import SwiftUI
 
 struct AddReviewViewController: View {
     @Binding var draft: ReceiptDraft
+    @Binding var confirmedLowConfidenceFieldKeys: Set<String>
     let isRecognizing: Bool
     var showsSaveButton = true
     let saveAction: () -> Void
@@ -16,7 +17,7 @@ struct AddReviewViewController: View {
     }
 
     private var needsAttentionCount: Int {
-        reviewFields.filter { $0.status != .recognized }.count
+        unresolvedReviewFields.count
     }
 
     private var completionText: String {
@@ -24,7 +25,11 @@ struct AddReviewViewController: View {
     }
 
     private var canSave: Bool {
-        !draft.totalText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        !draft.totalText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && unresolvedReviewFields.isEmpty
+    }
+
+    private var unresolvedReviewFields: [ReviewField] {
+        reviewFields.filter { $0.status == .review }
     }
 
     var body: some View {
@@ -44,13 +49,17 @@ struct AddReviewViewController: View {
                 HStack(spacing: 8) {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .foregroundStyle(.orange)
-                    Text("\(needsAttentionCount) 个字段需要确认")
+                    Text("\(needsAttentionCount) 个字段需要核对")
                         .font(.caption.weight(.semibold))
                     Spacer()
                 }
                 .padding(.horizontal, 10)
                 .padding(.vertical, 8)
                 .background(.orange.opacity(0.08), in: RoundedRectangle(cornerRadius: 8))
+            }
+
+            if !unresolvedReviewFields.isEmpty {
+                confirmationPanel
             }
 
             aiUnderstandingPanel
@@ -78,7 +87,7 @@ struct AddReviewViewController: View {
                     editAllFieldsButton
 
                     Button(action: saveAction) {
-                        Label("Save Receipt", systemImage: "checkmark.circle")
+                        Label(canSave ? "确认并保存" : "请先核对待确认字段", systemImage: "checkmark.circle")
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.borderedProminent)
@@ -97,10 +106,10 @@ struct AddReviewViewController: View {
                         .padding()
                 }
                 .scrollDismissesKeyboard(.interactively)
-                .navigationTitle("Edit Receipt")
+                .navigationTitle("编辑收据")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
-                    Button("Done") {
+                    Button("完成") {
                         showingFullEdit = false
                     }
                 }
@@ -111,7 +120,7 @@ struct AddReviewViewController: View {
     private var aiUnderstandingPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Label("AI 已理解收据内容", systemImage: "sparkles")
+                Label("已识别摘要", systemImage: "sparkles")
                     .font(.subheadline.weight(.semibold))
                 Spacer()
             }
@@ -121,8 +130,8 @@ struct AddReviewViewController: View {
                 AIUnderstandingChip(title: "报销", value: draft.reimbursementStatus.localizedName, systemImage: "briefcase", color: draft.reimbursementStatus == .reimbursable ? .green : .secondary)
             }
 
-            if !draft.notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                Label(draft.notes, systemImage: "note.text")
+            if !draft.paymentMethod.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                Label(draft.paymentMethod, systemImage: "creditcard")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
@@ -136,7 +145,7 @@ struct AddReviewViewController: View {
         Button {
             showingFullEdit = true
         } label: {
-            Label("Edit all fields", systemImage: "square.and.pencil")
+            Label("编辑全部字段", systemImage: "square.and.pencil")
                 .frame(maxWidth: .infinity)
         }
         .buttonStyle(.bordered)
@@ -150,23 +159,36 @@ struct AddReviewViewController: View {
             }
 
             VStack(spacing: 8) {
-                TextField("Merchant", text: $draft.merchant)
+                reviewTextField("商户", key: "merchant", text: $draft.merchant, isAmount: false)
                     .textContentType(.organizationName)
-                    .focused($focusedField, equals: "merchant")
 
-                DatePicker("Date", selection: $draft.date, displayedComponents: .date)
+                VStack(alignment: .leading, spacing: 4) {
+                    fieldLabel("日期", key: "date")
+                    DatePicker("日期", selection: $draft.date, displayedComponents: .date)
+                        .onChange(of: draft.date) { _ in
+                            confirmedLowConfidenceFieldKeys.remove("date")
+                        }
+                }
 
                 HStack(spacing: 10) {
-                    Picker("Category", selection: $draft.category) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        fieldLabel("分类", key: "category")
+                        Picker("分类", selection: $draft.category) {
                         ForEach(ReceiptCategory.allCases) { category in
                             Text(category.localizedName).tag(category)
                         }
                     }
                     .pickerStyle(.menu)
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    }
 
-                    CurrencyPicker(currencyCode: $draft.currencyCode)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("收据币种")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                        CurrencyPicker(currencyCode: $draft.currencyCode)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
                 }
 
                 Picker("报销状态", selection: $draft.reimbursementStatus) {
@@ -177,26 +199,16 @@ struct AddReviewViewController: View {
                 .pickerStyle(.segmented)
 
                 HStack(spacing: 10) {
-                    TextField("实付金额", text: $draft.totalText)
-                        .keyboardType(.decimalPad)
-                        .focused($focusedField, equals: "total")
-
-                    TextField("税额", text: $draft.taxText)
-                        .keyboardType(.decimalPad)
-                        .focused($focusedField, equals: "tax")
+                    reviewTextField("总额", key: "total", text: $draft.totalText)
+                    reviewTextField("税额", key: "tax", text: $draft.taxText)
                 }
 
                 HStack(spacing: 10) {
-                    TextField("小计/税前金额", text: $draft.subtotalText)
-                        .keyboardType(.decimalPad)
-                        .focused($focusedField, equals: "subtotal")
-
-                    TextField("Tip", text: $draft.tipText)
-                        .keyboardType(.decimalPad)
-                        .focused($focusedField, equals: "tip")
+                    reviewTextField("小计（税前）", key: "subtotal", text: $draft.subtotalText)
+                    reviewTextField("小费", key: "tip", text: $draft.tipText)
                 }
 
-                TextField("AI 备注", text: $draft.notes, axis: .vertical)
+                TextField("备注", text: $draft.notes, axis: .vertical)
                     .lineLimit(1...2)
                     .focused($focusedField, equals: "notes")
             }
@@ -208,16 +220,16 @@ struct AddReviewViewController: View {
 
     private var reviewFields: [ReviewField] {
         [
-            ReviewField(key: "merchant", title: "Merchant", value: draft.merchant, systemImage: "storefront", status: status(for: "merchant", value: draft.merchant)),
-            ReviewField(key: "category", title: "Category", value: draft.category.localizedName, systemImage: draft.category.systemImage, status: status(for: "category", value: draft.category == .other ? "" : draft.category.localizedName)),
-            ReviewField(key: "date", title: "Date", value: draft.date.formatted(date: .abbreviated, time: .omitted), systemImage: "calendar", status: status(for: "date", value: draft.date.formatted(date: .abbreviated, time: .omitted))),
-            ReviewField(key: "total", title: "实付金额", value: currencyValue(draft.totalText), systemImage: "sum", status: status(for: "total", value: draft.totalText)),
+            ReviewField(key: "merchant", title: "商户", value: draft.merchant, systemImage: "storefront", status: status(for: "merchant", value: draft.merchant)),
+            ReviewField(key: "category", title: "分类", value: draft.category.localizedName, systemImage: draft.category.systemImage, status: status(for: "category", value: draft.category == .other ? "" : draft.category.localizedName)),
+            ReviewField(key: "date", title: "日期", value: draft.date.formatted(date: .abbreviated, time: .omitted), systemImage: "calendar", status: status(for: "date", value: draft.date.formatted(date: .abbreviated, time: .omitted))),
+            ReviewField(key: "total", title: "总额", value: currencyValue(draft.totalText), systemImage: "sum", status: status(for: "total", value: draft.totalText)),
             ReviewField(key: "tax", title: "税额", value: currencyValue(draft.taxText), systemImage: "percent", status: status(for: "tax", value: draft.taxText)),
-            ReviewField(key: "subtotal", title: "小计/税前金额", value: currencyValue(draft.subtotalText), systemImage: "list.bullet.rectangle", status: status(for: "subtotal", value: draft.subtotalText)),
-            ReviewField(key: "paymentMethod", title: "Payment method", value: draft.paymentMethod, systemImage: "creditcard", status: status(for: "paymentMethod", value: draft.paymentMethod)),
-            ReviewField(key: "cardLast4", title: "Card last 4", value: draft.cardLast4, systemImage: "number", status: status(for: "cardLast4", value: draft.cardLast4)),
-            ReviewField(key: "receiptNumber", title: "Receipt number", value: draft.receiptNumber, systemImage: "number.square", status: status(for: "receiptNumber", value: draft.receiptNumber)),
-            ReviewField(key: "lineItems", title: "Line items", value: draft.lineItems.isEmpty ? "" : "\(draft.lineItems.count)", systemImage: "list.bullet", status: status(for: "lineItems", value: draft.lineItems.isEmpty ? "" : "\(draft.lineItems.count)"))
+            ReviewField(key: "subtotal", title: "小计（税前）", value: currencyValue(draft.subtotalText), systemImage: "list.bullet.rectangle", status: status(for: "subtotal", value: draft.subtotalText)),
+            ReviewField(key: "paymentMethod", title: "支付方式", value: draft.paymentMethod, systemImage: "creditcard", status: status(for: "paymentMethod", value: draft.paymentMethod)),
+            ReviewField(key: "cardLast4", title: "卡号后四位", value: draft.cardLast4, systemImage: "number", status: status(for: "cardLast4", value: draft.cardLast4)),
+            ReviewField(key: "receiptNumber", title: "收据编号", value: draft.receiptNumber, systemImage: "number.square", status: status(for: "receiptNumber", value: draft.receiptNumber)),
+            ReviewField(key: "lineItems", title: "商品明细", value: draft.lineItems.isEmpty ? "" : "\(draft.lineItems.count)", systemImage: "list.bullet", status: status(for: "lineItems", value: draft.lineItems.isEmpty ? "" : "\(draft.lineItems.count)"))
         ]
     }
 
@@ -231,9 +243,89 @@ struct AddReviewViewController: View {
             return .missing
         }
         if draft.lowConfidenceFieldKeys.contains(key) || !draft.recognizedFieldKeys.contains(key) {
+            if confirmedLowConfidenceFieldKeys.contains(key) {
+                return .confirmed
+            }
             return .review
         }
         return .recognized
+    }
+
+    private var confirmationPanel: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("请对照原收据逐项确认")
+                .font(.subheadline.weight(.semibold))
+            ForEach(unresolvedReviewFields) { field in
+                HStack(spacing: 8) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundStyle(.orange)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(field.title)
+                            .font(.caption.weight(.semibold))
+                        Text(confirmationReason(for: field.key))
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Button("已核对") {
+                        confirmedLowConfidenceFieldKeys.insert(field.key)
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                }
+                .padding(8)
+                .background(.orange.opacity(0.08), in: RoundedRectangle(cornerRadius: 8))
+            }
+        }
+        .padding(10)
+        .background(.orange.opacity(0.05), in: RoundedRectangle(cornerRadius: 8))
+    }
+
+    private func confirmationReason(for key: String) -> String {
+        ["total", "tax", "subtotal"].contains(key)
+            ? "金额关系需要与原收据核对"
+            : "OCR 识别结果需要与原收据核对"
+    }
+
+    private func fieldLabel(_ title: String, key: String) -> some View {
+        HStack(spacing: 5) {
+            Text(title)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+            if status(for: key, value: value(for: key)) == .review {
+                Label("需核对", systemImage: "exclamationmark.triangle.fill")
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(.orange)
+            } else if confirmedLowConfidenceFieldKeys.contains(key) {
+                Label("已核对", systemImage: "checkmark.circle.fill")
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(.green)
+            }
+        }
+    }
+
+    private func reviewTextField(_ title: String, key: String, text: Binding<String>, isAmount: Bool = true) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            fieldLabel(title, key: key)
+            TextField(title, text: text)
+                .keyboardType(isAmount ? .decimalPad : .default)
+                .focused($focusedField, equals: key)
+                .onChange(of: text.wrappedValue) { _ in
+                    confirmedLowConfidenceFieldKeys.remove(key)
+                }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func value(for key: String) -> String {
+        switch key {
+        case "merchant": draft.merchant
+        case "total": draft.totalText
+        case "tax": draft.taxText
+        case "subtotal": draft.subtotalText
+        case "tip": draft.tipText
+        default: ""
+        }
     }
 
 }
@@ -305,12 +397,13 @@ private struct AIUnderstandingChip: View {
 
 private enum ReviewFieldStatus {
     case recognized
+    case confirmed
     case review
     case missing
 
     var color: Color {
         switch self {
-        case .recognized: .green
+        case .recognized, .confirmed: .green
         case .review: .orange
         case .missing: .secondary
         }
@@ -319,6 +412,7 @@ private enum ReviewFieldStatus {
     var label: LocalizedStringKey {
         switch self {
         case .recognized: "Recognized"
+        case .confirmed: "Confirmed"
         case .review: "Check"
         case .missing: "Needs review"
         }
@@ -327,6 +421,7 @@ private enum ReviewFieldStatus {
     var systemImage: String {
         switch self {
         case .recognized: "checkmark.seal.fill"
+        case .confirmed: "checkmark.circle.fill"
         case .review: "exclamationmark.triangle.fill"
         case .missing: "circle.dashed"
         }

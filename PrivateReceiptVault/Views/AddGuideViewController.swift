@@ -20,14 +20,15 @@ struct AddGuideViewController: View {
     @State private var recognitionProgress = 0.0
     @State private var recognitionError: String?
     @State private var showingNoReceiptAlert = false
+    @State private var confirmedLowConfidenceFieldKeys: Set<String> = []
     private let recognitionProgressTimer = Timer.publish(every: 0.35, on: .main, in: .common).autoconnect()
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 12) {
+                    imagePreview
                     if selectedImage == nil {
-                        imagePreview
                         TrustBadgesView(compact: true)
                     }
 
@@ -35,7 +36,7 @@ struct AddGuideViewController: View {
                     selectedImageActions
 
                     if selectedImage != nil {
-                        AddReviewViewController(draft: $draft, isRecognizing: isRecognizing, showsSaveButton: false) {
+                        AddReviewViewController(draft: $draft, confirmedLowConfidenceFieldKeys: $confirmedLowConfidenceFieldKeys, isRecognizing: isRecognizing, showsSaveButton: false) {
                             save()
                         }
                     }
@@ -112,7 +113,11 @@ struct AddGuideViewController: View {
     }
 
     private var canSaveReceipt: Bool {
-        !draft.totalText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        !draft.totalText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && unresolvedLowConfidenceFieldKeys.isEmpty
+    }
+
+    private var unresolvedLowConfidenceFieldKeys: Set<String> {
+        draft.lowConfidenceFieldKeys.subtracting(confirmedLowConfidenceFieldKeys)
     }
 
     private var bottomSaveBar: some View {
@@ -120,7 +125,7 @@ struct AddGuideViewController: View {
             Button {
                 save()
             } label: {
-                Label("Save Receipt", systemImage: "checkmark.circle")
+                Label(canSaveReceipt ? "确认并保存" : "请先核对待确认字段", systemImage: "checkmark.circle")
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
@@ -155,7 +160,7 @@ struct AddGuideViewController: View {
             Button {
                 activePickerSource = .camera
             } label: {
-                Label(selectedImage == nil ? "Camera" : "Rescan", systemImage: "camera")
+                Label(selectedImage == nil ? "拍摄收据" : "重新拍摄", systemImage: "camera")
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
@@ -163,7 +168,7 @@ struct AddGuideViewController: View {
             Button {
                 activePickerSource = .photoLibrary
             } label: {
-                Label(selectedImage == nil ? "Import" : "Replace image", systemImage: "photo")
+                Label(selectedImage == nil ? "从相册导入" : "替换图片", systemImage: "photo")
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.bordered)
@@ -187,19 +192,6 @@ struct AddGuideViewController: View {
                         .foregroundStyle(.secondary)
                 }
 
-                Button {
-                    if originalImageForEditing == nil {
-                        originalImageForEditing = selectedImage
-                    }
-                    processedImageForEditing = selectedImage
-                    showingImageEditor = true
-                } label: {
-                    Label("裁剪", systemImage: "crop.rotate")
-                        .labelStyle(.iconOnly)
-                }
-                .buttonStyle(.bordered)
-                .controlSize(.small)
-                .disabled(isRecognizing)
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 8)
@@ -247,10 +239,10 @@ struct AddGuideViewController: View {
                 Image(systemName: "doc.text.viewfinder")
                     .font(.system(size: 42))
                     .foregroundStyle(.tint)
-                Text("拍一张照片")
+                Text("添加一张收据")
                     .font(.headline)
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("AI自动提取：")
+                    Text("自动识别后，请在保存前核对：")
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.secondary)
                     LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], alignment: .leading, spacing: 7) {
@@ -270,6 +262,7 @@ struct AddGuideViewController: View {
     }
 
     private func recognize(_ image: UIImage, fallbackImage: UIImage? = nil) {
+        confirmedLowConfidenceFieldKeys.removeAll()
         beginRecognitionProgress(reset: !isRecognizing)
         Task {
             do {
@@ -323,6 +316,7 @@ struct AddGuideViewController: View {
         }
 
         draft.reconcileAmountsKeepingTotal()
+        guard unresolvedLowConfidenceFieldKeys.isEmpty else { return }
         duplicateCandidates = store.duplicateCandidates(for: draft)
         if !duplicateCandidates.isEmpty {
             showingDuplicateAlert = true

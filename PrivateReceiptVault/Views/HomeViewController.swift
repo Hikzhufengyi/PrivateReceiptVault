@@ -291,9 +291,9 @@ private struct SummaryView: View {
     private var header: some View {
         HStack(alignment: .top, spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
-                Text(receiptCount == 0 ? "AI 等待整理你的第一张收据" : "AI 已完成整理")
+                Text(receiptCount == 0 ? "开始整理你的第一张收据" : "收据整理进度")
                     .font(.title3.bold())
-                Text(receiptCount == 0 ? "扫描后自动识别商户、金额、日期和分类" : "分类完成 \(autoClassifiedPercent)%")
+                Text(receiptCount == 0 ? "识别后可核对商户、金额、日期和分类" : unclassifiedCount > 0 ? "还有 \(unclassifiedCount) 张待分类" : "分类完成 \(autoClassifiedPercent)%")
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.secondary)
             }
@@ -302,7 +302,7 @@ private struct SummaryView: View {
                 VStack(spacing: 2) {
                     Label("添加收据", systemImage: "plus")
                         .font(.subheadline.weight(.semibold))
-                    Text("AI 自动识别")
+                    Text("识别后可核对")
                         .font(.caption2.weight(.medium))
                         .opacity(0.86)
                 }
@@ -311,7 +311,7 @@ private struct SummaryView: View {
                 .frame(minWidth: 96, minHeight: 48)
                 .background(.tint, in: RoundedRectangle(cornerRadius: 8))
             }
-            .accessibilityLabel("添加收据，AI 自动识别")
+            .accessibilityLabel("添加收据，识别后可核对")
             .buttonStyle(.plain)
         }
     }
@@ -326,7 +326,7 @@ private struct FirstReceiptChecklist: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("扫描后自动识别：")
+            Text("扫描后识别，可在保存前核对：")
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(.secondary)
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
