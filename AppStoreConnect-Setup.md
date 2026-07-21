@@ -1,16 +1,20 @@
 # App Store Connect Setup
 
-## In-App Purchase
+## Auto-Renewable Subscriptions
 
-Create a non-consumable product:
+Create one subscription group named `Receipt Vault Pro` with two products:
 
-- Product ID: `receiptvault.pro.lifetime`
-- Reference name: `Receipt Vault Pro Lifetime`
-- Type: Non-Consumable
-- Suggested display name: `Receipt Vault Pro`
-- Suggested description: `Unlimited private receipt storage, professional exports, expense reports, insights, backup and restore.`
+- Monthly: `receiptvault.pro.monthly`, one month, US price `$2.99`.
+- Yearly: `receiptvault.pro.yearly`, one year, US price `$19.99`.
+- Both products use the same service level and unlock the same Pro features.
+- Do not configure a free trial or introductory offer.
+- Use localized display names and descriptions for every supported App Store locale.
 
 The app uses StoreKit 2 in `StoreKitService.swift`.
+
+## Legacy Lifetime Purchase
+
+Keep `receiptvault.pro.lifetime` available for entitlement restoration but do not promote it to new users. Existing lifetime purchasers must retain permanent Pro access. Do not reuse or change the type of this product ID.
 
 ## Free Plan
 
@@ -32,9 +36,10 @@ Pro unlocks:
 - Bundle identifier is set to `com.hikzhufengyi.receiptvault`.
 - Increment `MARKETING_VERSION` by `0.1` for each upload, using one decimal place. For example: `1.9 -> 2.0`, `2.0 -> 2.1`.
 - Set `CURRENT_PROJECT_VERSION` to the upload date in `yyyyMMdd` format. For example: `20260710`.
-- Create the product ID above in App Store Connect.
-- Add pricing and availability for the non-consumable purchase.
-- Test purchase and restore in Sandbox and TestFlight.
+- Create the subscription group and both subscription product IDs above in App Store Connect.
+- Set the US prices to `$2.99/month` and `$19.99/year`, then review Apple's equivalent prices for other storefronts.
+- Confirm the legacy lifetime product remains available for restoration.
+- Test monthly purchase, yearly purchase, renewal, cancellation/expiration, upgrade/downgrade, lifetime restore, and subscription restore in Sandbox and TestFlight.
 - Keep the local "Unlock Pro for testing" button only in debug/TestFlight builds before public release.
 
 ## Export Compliance

@@ -27,6 +27,9 @@ struct PrivateReceiptVaultApp: App {
             .environmentObject(proAccess)
             .environmentObject(appLock)
             .environmentObject(storeKit)
+            .task {
+                await storeKit.start(proAccess: proAccess)
+            }
             .onChange(of: scenePhase) { _, newPhase in
                 switch newPhase {
                 case .active:
@@ -75,6 +78,8 @@ struct AppLockContainer<Content: View>: View {
 }
 
 struct RootTabView: View {
+    @State private var isPaywallPresentedForTesting = false
+
     var body: some View {
         TabView {
             HomeViewController()
@@ -92,5 +97,17 @@ struct RootTabView: View {
                     Label("Insights", systemImage: "chart.pie")
                 }
         }
+        #if DEBUG
+        .task {
+            if ProcessInfo.processInfo.arguments.contains("-showPaywallForUITesting") {
+                isPaywallPresentedForTesting = true
+            }
+        }
+        .sheet(isPresented: $isPaywallPresentedForTesting) {
+            PaywallViewController(
+                focusPlansForTesting: ProcessInfo.processInfo.arguments.contains("-focusPaywallPlansForUITesting")
+            )
+        }
+        #endif
     }
 }

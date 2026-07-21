@@ -19,10 +19,10 @@ struct SettingsViewController: View {
         List {
             Section("Plan") {
                 HStack {
-                    Label(proAccess.isPro ? "Pro unlocked" : "Free plan", systemImage: proAccess.isPro ? "checkmark.seal.fill" : "seal")
+                    Label(planTitle, systemImage: proAccess.isPro ? "checkmark.seal.fill" : "seal")
                     Spacer()
                     Text(proAccess.isPro ? "Unlimited" : "\(ProAccess.freeReceiptLimit) receipts")
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Theme.secondaryText)
                 }
 
                 #if DEBUG
@@ -38,6 +38,14 @@ struct SettingsViewController: View {
                         showingPaywall = true
                     } label: {
                         Label("Upgrade to Pro", systemImage: "lock.open")
+                    }
+                }
+
+                if proAccess.hasActiveSubscription {
+                    Button {
+                        openExternalURL("https://apps.apple.com/account/subscriptions")
+                    } label: {
+                        Label("Manage Subscription", systemImage: "person.crop.circle")
                     }
                 }
             }
@@ -65,7 +73,7 @@ struct SettingsViewController: View {
                 LocalDataFlowView()
 
                 Button {
-                    openExternalURL("https://getreceiptvault.com/privacy")
+                    openExternalURL(AppStoreLinks.privacyPolicyURL.absoluteString)
                 } label: {
                     Label("Privacy Policy", systemImage: "hand.raised")
                 }
@@ -90,7 +98,7 @@ struct SettingsViewController: View {
             Section("Positioning") {
                 Text("Private Receipt Vault is designed for freelancers, contractors, travelers, and small business owners who want an offline receipt organizer for reimbursement and tax-season records.")
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Theme.secondaryText)
             }
 
             Section {
@@ -173,6 +181,12 @@ struct SettingsViewController: View {
         }
     }
 
+    private var planTitle: LocalizedStringKey {
+        if proAccess.hasLifetimeAccess { return "Lifetime Pro" }
+        if proAccess.hasActiveSubscription { return "Pro subscription" }
+        return "Free plan"
+    }
+
     private func restoreBackup(from url: URL) {
         let didAccess = url.startAccessingSecurityScopedResource()
         defer {
@@ -205,7 +219,7 @@ private struct LocalDataFlowView: View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Private data flow")
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Theme.secondaryText)
 
             HStack(spacing: 8) {
                 ForEach(Array(steps.enumerated()), id: \.offset) { index, step in
@@ -225,7 +239,7 @@ private struct LocalDataFlowView: View {
                     if index < steps.count - 1 {
                         Image(systemName: "chevron.right")
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Theme.secondaryText)
                     }
                 }
             }

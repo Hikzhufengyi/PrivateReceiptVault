@@ -305,3 +305,35 @@
 
 /* Accessibility */
 "Clear search" = "검색 지우기";
+"Choose your plan" = "요금제 선택";
+"Yearly" = "연간";
+"Monthly" = "월간";
+"per year" = "연간";
+"per month" = "월간";
+"Recommended" = "추천";
+"Selected" = "선택됨";
+"Loading subscription options" = "구독 옵션 불러오는 중";
+"Continue" = "계속";
+"Subscriptions renew automatically unless cancelled in your Apple account. Purchases are processed by Apple. Your receipts stay on this device unless you export or back them up." = "Apple 계정에서 취소하지 않는 한 구독은 자동 갱신됩니다. 결제는 Apple에서 처리합니다. 내보내거나 백업하지 않는 한 영수증은 이 기기에 보관됩니다.";
+"Subscription options are unavailable. Please try again later." = "구독 옵션을 사용할 수 없습니다. 나중에 다시 시도하세요.";
+"No active Pro subscription or lifetime purchase was found for this Apple ID." = "이 Apple ID에서 활성 Pro 구독 또는 평생 구매를 찾지 못했습니다.";
+"Manage Subscription" = "구독 관리";
+"Lifetime Pro" = "평생 Pro";
+"Pro subscription" = "Pro 구독";
+"Retry" = "다시 시도";
+"Terms of Use" = "이용 약관";
+"%lld receipts included" = "영수증 %lld개 포함";
+"CSV" = "CSV";
+"Create + view" = "생성 + 보기";
+"Create polished summaries for reimbursement, taxes, or records." = "경비 처리, 세금 또는 기록용 요약을 깔끔하게 만드세요.";
+"Exports" = "내보내기";
+"Local file" = "로컬 파일";
+"Lock included" = "앱 잠금 포함";
+"Long-term archive" = "장기 보관";
+"No account, no bank connection, device lock, and local backup." = "계정과 은행 연결 없이 앱 잠금과 로컬 백업을 제공합니다.";
+"PDF export packets" = "PDF 내보내기 묶음";
+"Package CSV data, PDF summaries, and original receipt images together." = "CSV 데이터, PDF 요약, 영수증 원본 이미지를 함께 묶으세요.";
+"Private by default" = "기본으로 비공개";
+"Professional export" = "전문 내보내기";
+"Remove the free receipt limit when your vault starts to grow." = "보관함이 커져도 무료 영수증 수 제한을 받지 않습니다.";
+"ZIP with images" = "이미지 포함 ZIP";

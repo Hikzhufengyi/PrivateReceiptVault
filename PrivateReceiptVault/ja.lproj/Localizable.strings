@@ -305,3 +305,35 @@
 
 /* Accessibility */
 "Clear search" = "検索をクリア";
+"Choose your plan" = "プランを選択";
+"Yearly" = "年間";
+"Monthly" = "月間";
+"per year" = "年額";
+"per month" = "月額";
+"Recommended" = "おすすめ";
+"Selected" = "選択済み";
+"Loading subscription options" = "サブスクリプションを読み込み中";
+"Continue" = "続ける";
+"Subscriptions renew automatically unless cancelled in your Apple account. Purchases are processed by Apple. Your receipts stay on this device unless you export or back them up." = "Appleアカウントで解約しない限り、サブスクリプションは自動更新されます。購入はAppleが処理します。書き出しまたはバックアップを行わない限り、レシートはこのデバイスに保存されます。";
+"Subscription options are unavailable. Please try again later." = "サブスクリプションを利用できません。後でもう一度お試しください。";
+"No active Pro subscription or lifetime purchase was found for this Apple ID." = "このApple IDには有効なProサブスクリプションまたは買い切り購入が見つかりませんでした。";
+"Manage Subscription" = "サブスクリプションを管理";
+"Lifetime Pro" = "買い切りPro";
+"Pro subscription" = "Proサブスクリプション";
+"Retry" = "再試行";
+"Terms of Use" = "利用規約";
+"%lld receipts included" = "%lld枚のレシートを保存可能";
+"CSV" = "CSV";
+"Create + view" = "作成・閲覧";
+"Create polished summaries for reimbursement, taxes, or records." = "精算、税務、記録用の見やすい概要を作成します。";
+"Exports" = "書き出し";
+"Local file" = "ローカルファイル";
+"Lock included" = "アプリロック対応";
+"Long-term archive" = "長期保管";
+"No account, no bank connection, device lock, and local backup." = "アカウントや銀行連携は不要。アプリロックとローカルバックアップに対応。";
+"PDF export packets" = "PDF書き出しパック";
+"Package CSV data, PDF summaries, and original receipt images together." = "CSVデータ、PDF概要、レシート原画像をまとめて書き出します。";
+"Private by default" = "初期設定でプライベート";
+"Professional export" = "プロ向け書き出し";
+"Remove the free receipt limit when your vault starts to grow." = "保管量が増えても無料版の枚数制限を受けません。";
+"ZIP with images" = "画像付きZIP";

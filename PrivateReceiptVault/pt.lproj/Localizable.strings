@@ -305,3 +305,35 @@
 
 /* Accessibility */
 "Clear search" = "Limpar busca";
+"Choose your plan" = "Escolha o plano";
+"Yearly" = "Anual";
+"Monthly" = "Mensal";
+"per year" = "por ano";
+"per month" = "por mês";
+"Recommended" = "Recomendado";
+"Selected" = "Selecionado";
+"Loading subscription options" = "A carregar subscrições";
+"Continue" = "Continuar";
+"Subscriptions renew automatically unless cancelled in your Apple account. Purchases are processed by Apple. Your receipts stay on this device unless you export or back them up." = "As subscrições renovam automaticamente, salvo cancelamento na conta Apple. As compras são processadas pela Apple. Os recibos ficam neste dispositivo, exceto se os exportar ou fizer uma cópia de segurança.";
+"Subscription options are unavailable. Please try again later." = "As subscrições não estão disponíveis. Tente novamente mais tarde.";
+"No active Pro subscription or lifetime purchase was found for this Apple ID." = "Não foi encontrada uma subscrição Pro ativa nem uma compra vitalícia para este Apple ID.";
+"Manage Subscription" = "Gerir subscrição";
+"Lifetime Pro" = "Pro vitalício";
+"Pro subscription" = "Subscrição Pro";
+"Retry" = "Tentar novamente";
+"Terms of Use" = "Termos de utilização";
+"%lld receipts included" = "%lld recibos incluídos";
+"CSV" = "CSV";
+"Create + view" = "Criar + ver";
+"Create polished summaries for reimbursement, taxes, or records." = "Crie resumos claros para reembolsos, impostos ou registos.";
+"Exports" = "Exportações";
+"Local file" = "Ficheiro local";
+"Lock included" = "Bloqueio incluído";
+"Long-term archive" = "Arquivo de longo prazo";
+"No account, no bank connection, device lock, and local backup." = "Sem conta ou ligação bancária, com bloqueio e cópia local.";
+"PDF export packets" = "Pacotes PDF";
+"Package CSV data, PDF summaries, and original receipt images together." = "Agrupe dados CSV, resumos PDF e imagens originais dos recibos.";
+"Private by default" = "Privado por predefinição";
+"Professional export" = "Exportação profissional";
+"Remove the free receipt limit when your vault starts to grow." = "Remova o limite gratuito quando o arquivo crescer.";
+"ZIP with images" = "ZIP com imagens";

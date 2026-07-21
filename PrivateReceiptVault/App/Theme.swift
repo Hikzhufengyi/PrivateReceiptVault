@@ -10,5 +10,9 @@ enum Theme {
     static let tint = Color.accentColor
 
     static let searchBackground = Color(uiColor: .secondarySystemGroupedBackground)
+    static let subscriptionSelectionBackground = Color.accentColor.opacity(0.10)
+    static let subscriptionBadgeBackground = Color.accentColor.opacity(0.14)
+    static let secondarySurface = Color(uiColor: .secondarySystemGroupedBackground)
+    static let secondaryText = Color(uiColor: .secondaryLabel)
     static let separator = Color(uiColor: .separator)
 }
