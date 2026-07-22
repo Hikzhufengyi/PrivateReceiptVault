@@ -65,7 +65,7 @@ private struct TrustBadgeButton: View {
             HStack(spacing: 5) {
                 Text(badge.icon)
                     .font(.caption)
-                Text(badge.title)
+                Text(String(localized: String.LocalizationValue(badge.title)))
                     .font(.caption.weight(.semibold))
                     .lineLimit(1)
                     .minimumScaleFactor(0.75)

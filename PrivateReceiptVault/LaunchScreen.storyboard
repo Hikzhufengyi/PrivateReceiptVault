@@ -43,43 +43,11 @@
                                         <fontDescription key="fontDescription" type="system" weight="bold" pointSize="32"/>
                                         <color key="textColor" red="0.050980392160000003" green="0.070588235289999995" blue="0.090196078430000007" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                     </label>
-                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Offline. Private. On-device OCR." textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="YES" translatesAutoresizingMaskIntoConstraints="NO" id="launch-subtitle">
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Receipts, ready when you need them." textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="YES" translatesAutoresizingMaskIntoConstraints="NO" id="launch-subtitle">
                                         <rect key="frame" x="0.0" y="174" width="321" height="22"/>
                                         <fontDescription key="fontDescription" type="system" weight="medium" pointSize="18"/>
                                         <color key="textColor" red="0.30980392159999998" green="0.34509803920000002" blue="0.37647058819999998" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                     </label>
-                                    <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="10" translatesAutoresizingMaskIntoConstraints="NO" id="launch-badges">
-                                        <rect key="frame" x="50.666666666666686" y="228" width="220" height="104"/>
-                                        <subviews>
-                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="No account required" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" translatesAutoresizingMaskIntoConstraints="NO" id="badge-account">
-                                                <rect key="frame" x="0.0" y="0.0" width="220" height="28"/>
-                                                <constraints>
-                                                    <constraint firstAttribute="height" constant="28" id="badge-account-height"/>
-                                                </constraints>
-                                                <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="14"/>
-                                                <color key="textColor" red="0.039215686270000001" green="0.4588235294" blue="0.40784313729999999" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                                            </label>
-                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="No bank connection" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" translatesAutoresizingMaskIntoConstraints="NO" id="badge-bank">
-                                                <rect key="frame" x="0.0" y="38" width="220" height="28"/>
-                                                <constraints>
-                                                    <constraint firstAttribute="height" constant="28" id="badge-bank-height"/>
-                                                </constraints>
-                                                <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="14"/>
-                                                <color key="textColor" red="0.039215686270000001" green="0.4588235294" blue="0.40784313729999999" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                                            </label>
-                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Local encrypted backups" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" translatesAutoresizingMaskIntoConstraints="NO" id="badge-backup">
-                                                <rect key="frame" x="0.0" y="76" width="220" height="28"/>
-                                                <constraints>
-                                                    <constraint firstAttribute="height" constant="28" id="badge-backup-height"/>
-                                                </constraints>
-                                                <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="14"/>
-                                                <color key="textColor" red="0.039215686270000001" green="0.4588235294" blue="0.40784313729999999" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                                            </label>
-                                        </subviews>
-                                        <constraints>
-                                            <constraint firstAttribute="width" constant="220" id="badges-width"/>
-                                        </constraints>
-                                    </stackView>
                                 </subviews>
                                 <constraints>
                                     <constraint firstItem="launch-mark" firstAttribute="top" secondItem="launch-card" secondAttribute="top" id="mark-top"/>
@@ -88,11 +56,9 @@
                                     <constraint firstItem="launch-title" firstAttribute="leading" secondItem="launch-card" secondAttribute="leading" id="title-leading"/>
                                     <constraint firstAttribute="trailing" secondItem="launch-title" secondAttribute="trailing" id="title-trailing"/>
                                     <constraint firstItem="launch-subtitle" firstAttribute="top" secondItem="launch-title" secondAttribute="bottom" constant="11" id="subtitle-top"/>
+                                    <constraint firstAttribute="bottom" secondItem="launch-subtitle" secondAttribute="bottom" id="subtitle-bottom"/>
                                     <constraint firstItem="launch-subtitle" firstAttribute="leading" secondItem="launch-card" secondAttribute="leading" id="subtitle-leading"/>
                                     <constraint firstAttribute="trailing" secondItem="launch-subtitle" secondAttribute="trailing" id="subtitle-trailing"/>
-                                    <constraint firstItem="launch-badges" firstAttribute="top" secondItem="launch-subtitle" secondAttribute="bottom" constant="32" id="badges-top"/>
-                                    <constraint firstItem="launch-badges" firstAttribute="centerX" secondItem="launch-card" secondAttribute="centerX" id="badges-center-x"/>
-                                    <constraint firstAttribute="bottom" secondItem="launch-badges" secondAttribute="bottom" id="badges-bottom"/>
                                 </constraints>
                             </view>
                         </subviews>

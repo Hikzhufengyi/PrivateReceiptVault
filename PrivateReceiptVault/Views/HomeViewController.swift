@@ -272,9 +272,9 @@ private struct SummaryView: View {
                 FirstReceiptChecklist()
             } else {
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
-                    StatPill(title: "收据", value: localizedReceiptCount(receiptCount), systemImage: "doc.text", action: allReceiptsAction)
-                    StatPill(title: "可报销", value: localizedReceiptCount(reimbursableReceiptCount), systemImage: "briefcase", action: reimbursableAction)
-                    StatPill(title: "税务记录", value: localizedReceiptCount(taxRecordCount), systemImage: "percent", action: taxRecordsAction)
+                    StatPill(title: String(localized: "收据"), value: localizedReceiptCount(receiptCount), systemImage: "doc.text", action: allReceiptsAction)
+                    StatPill(title: String(localized: "可报销"), value: localizedReceiptCount(reimbursableReceiptCount), systemImage: "briefcase", action: reimbursableAction)
+                    StatPill(title: String(localized: "税务记录"), value: localizedReceiptCount(taxRecordCount), systemImage: "percent", action: taxRecordsAction)
                 }
 
                 if unclassifiedCount > 0 {
@@ -291,9 +291,13 @@ private struct SummaryView: View {
     private var header: some View {
         HStack(alignment: .top, spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
-                Text(receiptCount == 0 ? "开始整理你的第一张收据" : "收据整理进度")
+                Text(receiptCount == 0 ? String(localized: "开始整理你的第一张收据") : String(localized: "收据整理进度"))
                     .font(.title3.bold())
-                Text(receiptCount == 0 ? "识别后可核对商户、金额、日期和分类" : unclassifiedCount > 0 ? "还有 \(unclassifiedCount) 张待分类" : "分类完成 \(autoClassifiedPercent)%")
+                Text(receiptCount == 0
+                     ? String(localized: "识别后可核对商户、金额、日期和分类")
+                     : unclassifiedCount > 0
+                     ? String(format: String(localized: "UnclassifiedCountFormat"), unclassifiedCount)
+                     : String(format: String(localized: "ClassificationCompleteFormat"), autoClassifiedPercent))
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.secondary)
             }
@@ -302,7 +306,7 @@ private struct SummaryView: View {
                 VStack(spacing: 2) {
                     Label("添加收据", systemImage: "plus")
                         .font(.subheadline.weight(.semibold))
-                    Text("识别后可核对")
+                    Text(String(localized: "识别后可核对"))
                         .font(.caption2.weight(.medium))
                         .opacity(0.86)
                 }

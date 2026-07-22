@@ -565,11 +565,7 @@ enum ReimbursementStatus: String, CaseIterable, Codable, Identifiable {
     var id: String { rawValue }
 
     var localizedName: String {
-        switch self {
-        case .notReimbursable: "不报销"
-        case .reimbursable: "可报销"
-        case .reimbursed: "已报销"
-        }
+        String(localized: String.LocalizationValue(rawValue))
     }
 }
 
